@@ -94,3 +94,5 @@ export type GameError =
 export type ReduceResult =
   | { ok: true; state: GameState }
   | { ok: false; error: GameError };
+
+export type PublicChoiceSpec = Omit<ChoiceSpec, "correct">;
