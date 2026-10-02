@@ -5,7 +5,8 @@
   "description": "",
   "scripts": {
     "test": "pnpm -r test",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "check": "pnpm typecheck && pnpm test"
   },
   "repository": {
     "type": "git",
