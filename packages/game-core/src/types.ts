@@ -89,7 +89,7 @@ export type Action =
 export type GameError =
   | "NOT_YOUR_TURN" | "WRONG_PHASE" | "UNKNOWN_CARD" | "CARD_ALREADY_PLAYED" 
   | "INVALID_ANSWER" | "ALREADY_TRIED" | "TOO_EARLY" | "NOT_ENOUGH_QUESTIONS"
-  | "ALREADY_JOINED" | "NOT_ANSWERED_YET";
+  | "ALREADY_JOINED" | "NOT_ANSWERED_YET" | "ROOM_FULL" | "NOT_ENOUGH_PLAYERS";
 
 export type ReduceResult =
   | { ok: true; state: GameState }
