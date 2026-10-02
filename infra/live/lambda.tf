@@ -39,8 +39,11 @@ data "aws_iam_policy_document" "game_session" {
     resources = ["${aws_cloudwatch_log_group.game_session.arn}:*"]
   }
 
-  # execute-api:ManageConnections (PostToConnection) gets added in 2d-3,
-  # once the WebSocket API exists to point at.
+  statement {
+    sid       = "PushToClients"
+    actions   = ["execute-api:ManageConnections"]
+    resources = ["${aws_apigatewayv2_api.ws.execution_arn}/${aws_apigatewayv2_stage.dev.name}/POST/@connections/*"]
+  }
 }
 
 resource "aws_iam_role_policy" "game_session" {
