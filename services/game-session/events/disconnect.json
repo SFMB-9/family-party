@@ -1,0 +1,1 @@
+{ "requestContext": { "routeKey": "$disconnect", "connectionId": "test-123", "domainName": "example.com", "stage": "dev" } }
