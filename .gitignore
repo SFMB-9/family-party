@@ -5,3 +5,4 @@ dist/
 *.tfstate*
 .env*
 tfplan
+*.tfvars
