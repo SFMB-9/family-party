@@ -6,6 +6,7 @@ import type {
 
 export const MAX_PLAYERS = 10;    // same as Unity
 export const BOARD_COLUMNS = 5;   // categories per board
+export const MAX_NAME_LENGTH = 20;
 
 export function initialState(): GameState {
   return {
@@ -51,9 +52,31 @@ function join(state: GameState, action: ActionOf<"JOIN">): ReduceResult {
   if (state.players.some((p) => p.id === action.player.id)) return fail("ALREADY_JOINED");
   if (state.players.length >= MAX_PLAYERS) return fail("ROOM_FULL");
 
-  const players = [...state.players, action.player];
-  const scores = { ...state.scores, [action.player.id]: 0 };
+  const name = normalizeName(action.player.name);
+  if (name === null) return fail("INVALID_NAME");
+  if (state.players.some((p) => sameName(p.name, name))) return fail("NAME_TAKEN");
+
+  const player = { ...action.player, name };   // store the cleaned-up name, not the raw one
+  const players = [...state.players, player];
+  const scores = { ...state.scores, [player.id]: 0 };
   return done({ ...state, players, scores });
+}
+
+/**
+ * Trim and collapse inner whitespace: "  Ana   María " → "Ana María".
+ * Returns null if the result is empty or too long. Length counts characters
+ * as people see them, so an emoji counts as 1 (plain `.length` would say 2).
+ */
+export function normalizeName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const name = raw.trim().replace(/\s+/g, " ");
+  const length = [...name].length;
+  return length >= 1 && length <= MAX_NAME_LENGTH ? name : null;
+}
+
+/** "ana", "Ana" and "ANA" are the same name. */
+function sameName(a: string, b: string): boolean {
+  return a.localeCompare(b, undefined, { sensitivity: "base" }) === 0;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_COLUMNS, MAX_PLAYERS, initialState, reduce } from "./reducer";
+import { BOARD_COLUMNS, MAX_NAME_LENGTH, MAX_PLAYERS, initialState, reduce } from "./reducer";
 import type { Category, GameState, Player, Question, ReduceResult } from "./types";
 
 // ---- helpers ----
@@ -52,6 +52,43 @@ describe("JOIN", () => {
     const full = lobbyWith(...Array.from({ length: MAX_PLAYERS }, (_, i) => `p${i}`));
     expect(reduce(full, { type: "JOIN", player: player("late") }))
       .toEqual({ ok: false, error: "ROOM_FULL" });
+  });
+
+  it("stores the name trimmed, with inner spaces collapsed", () => {
+    const s = ok(reduce(initialState(), { type: "JOIN", player: { id: "a", name: "  Ana   María " } }));
+    expect(s.players[0]!.name).toBe("Ana María");
+  });
+
+  it.each(["", "   ", "x".repeat(MAX_NAME_LENGTH + 1)])("rejects the name %j", (name) => {
+    expect(reduce(initialState(), { type: "JOIN", player: { id: "a", name } }))
+      .toEqual({ ok: false, error: "INVALID_NAME" });
+  });
+
+  it("accepts a name exactly at the limit", () => {
+    const name = "x".repeat(MAX_NAME_LENGTH);
+    expect(reduce(initialState(), { type: "JOIN", player: { id: "a", name } }).ok).toBe(true);
+  });
+
+  it("counts an emoji as one character", () => {
+    const name = "🎉".repeat(MAX_NAME_LENGTH);   // .length would be 40
+    expect(reduce(initialState(), { type: "JOIN", player: { id: "a", name } }).ok).toBe(true);
+  });
+
+  it("rejects a non-string name from a misbehaving client", () => {
+    const player = { id: "a", name: 42 } as unknown as Player;
+    expect(reduce(initialState(), { type: "JOIN", player })).toEqual({ ok: false, error: "INVALID_NAME" });
+  });
+
+  it.each(["ana", "ANA", " Ana "])("treats %j as the same name as \"Ana\"", (name) => {
+    const s = ok(reduce(initialState(), { type: "JOIN", player: { id: "a", name: "Ana" } }));
+    expect(reduce(s, { type: "JOIN", player: { id: "b", name } }))
+      .toEqual({ ok: false, error: "NAME_TAKEN" });
+  });
+
+  it("treats accented and unaccented spellings as the same name", () => {
+    const s = ok(reduce(initialState(), { type: "JOIN", player: { id: "a", name: "José" } }));
+    expect(reduce(s, { type: "JOIN", player: { id: "b", name: "Jose" } }))
+      .toEqual({ ok: false, error: "NAME_TAKEN" });
   });
 
   it("does not mutate the previous state", () => {
