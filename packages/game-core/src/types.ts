@@ -54,7 +54,7 @@ export interface Card {
 export type Phase =
   | { kind: "lobby" }
   | { kind: "picking" }
-  | { 
+  | {
       kind: "answering";
       cardId: CardId;
       answerer: PlayerId;
@@ -70,6 +70,7 @@ export interface GameState {
   board: Card[];
   questions: Record<QuestionId, Question>;
   ratings: Record<QuestionId, Record<PlayerId, Difficulty>>;
+  attempts: Record<QuestionId, Record<PlayerId, boolean>>; // who tried each question, and whether they got it right
   turnOwner: number; // index into players
   phase: Phase;
   seed: number;
@@ -87,12 +88,32 @@ export type Action =
 
 // ---- Result: invalid actions are expected, not exceptional ----
 export type GameError =
-  | "NOT_YOUR_TURN" | "WRONG_PHASE" | "UNKNOWN_CARD" | "CARD_ALREADY_PLAYED" 
-  | "INVALID_ANSWER" | "ALREADY_TRIED" | "TOO_EARLY" | "NOT_ENOUGH_QUESTIONS"
-  | "ALREADY_JOINED" | "NOT_ANSWERED_YET" | "ROOM_FULL" | "NOT_ENOUGH_PLAYERS";
+  | "WRONG_PHASE" | "NOT_YOUR_TURN" | "UNKNOWN_PLAYER" | "UNKNOWN_CARD" | "UNKNOWN_QUESTION"
+  | "CARD_ALREADY_PLAYED" | "INVALID_ANSWER" | "INVALID_RATING" | "TOO_EARLY" | "TOO_LATE"
+  | "NOT_ENOUGH_PLAYERS" | "NOT_ENOUGH_QUESTIONS" | "ALREADY_JOINED" | "ROOM_FULL"
+  | "NOT_ANSWERED_YET";
 
 export type ReduceResult =
   | { ok: true; state: GameState }
   | { ok: false; error: GameError };
 
 export type PublicChoiceSpec = Omit<ChoiceSpec, "correct">;
+
+// ---- What clients are allowed to see ----
+export type PublicQuestion = Omit<Question, "response"> & { response: PublicChoiceSpec };
+
+export interface PublicState {
+  players: Player[];
+  scores: Record<PlayerId, number>;
+  board: Card[];
+  turnOwner: number;
+  phase: Phase;
+  /** Only the question currently being answered, without its answer. */
+  current: PublicQuestion | null;
+}
+
+export interface Ranking {
+  player: Player;
+  score: number;
+  rank: number; // ties share a rank: 1, 1, 3
+}
