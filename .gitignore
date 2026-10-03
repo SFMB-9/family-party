@@ -7,3 +7,9 @@ dist/
 tfplan
 *.tfvars
 out.json
+.build/
+
+# Next.js
+next-env.d.ts
+*.tsbuildinfo
+!.env.example

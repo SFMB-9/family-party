@@ -2,8 +2,12 @@ packages:
   - "apps/*"
   - "services/*"
   - "packages/*"
+
 # Supply-chain protection: never install a version published less than 24h ago.
 # Malicious releases are usually caught and pulled within hours.
-allowBuilds:
-  esbuild: set this to true or false
 minimumReleaseAge: 1440
+
+# Packages allowed to run install scripts. Everything else is blocked.
+# esbuild: its postinstall verifies the platform-specific binary.
+allowBuilds:
+  esbuild: true

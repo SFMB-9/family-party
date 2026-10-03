@@ -1,0 +1,108 @@
+:root {
+  --bg: #14121f;
+  --panel: #1e1b2e;
+  --text: #ece9f7;
+  --muted: #9a94b8;
+  --accent: #ffcf4a;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  gap: 12px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.status {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--panel);
+}
+.status-open { color: var(--ok); }
+.status-connecting { color: var(--warn); }
+.status-closed { color: var(--bad); }
+
+.feed {
+  flex: 1;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 12px;
+  background: var(--panel);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.empty { color: var(--muted); text-align: center; margin: auto; }
+
+.msg {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: hsl(var(--hue) 40% 22%);
+  border-left: 4px solid hsl(var(--hue) 70% 60%);
+}
+.who { font-family: ui-monospace, monospace; font-size: 0.75rem; color: hsl(var(--hue) 80% 75%); }
+.text { overflow-wrap: anywhere; }
+.when { font-size: 0.7rem; color: var(--muted); }
+
+.composer { display: flex; gap: 8px; }
+
+.composer input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #3a3555;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1rem; /* 16px+ stops iOS from zooming into the field */
+}
+
+.composer button {
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #1a1400;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.composer button:disabled { opacity: 0.4; }
