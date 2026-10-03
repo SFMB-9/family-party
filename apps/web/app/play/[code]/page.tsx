@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
+  Board, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -16,7 +16,7 @@ import { useRoom } from "../../lib/useRoom";
  */
 export default function PlayPage() {
   const code = String(useParams<{ code: string }>().code).toUpperCase();
-  const { status, state, error, send, clockOffset, missingConfig } = useRoom(code, "player");
+  const { status, state, error, send, clockOffset, quality, latencyMs, missingConfig } = useRoom(code, "player");
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
   const [name, setName] = useState("");
   const [dismissed, setDismissed] = useState<number | null>(null);
@@ -52,6 +52,8 @@ export default function PlayPage() {
       <main className="shell phone">
         <header className="top">
           <h1 className="logo small">Family Party</h1>
+          <span className="top-right">
+          <ConnectionDot quality={quality} status={status} latencyMs={latencyMs} label={false} />
           <CopyText
             className="room-code small"
             text={code}
@@ -64,6 +66,7 @@ export default function PlayPage() {
               url: typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : "",
             }}
           />
+          </span>
         </header>
 
         {status !== "open" && <p className="notice">Reconectando…</p>}

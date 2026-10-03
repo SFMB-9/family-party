@@ -70,6 +70,18 @@ const errorOf = (conn: string) => push.last(conn, "error")?.error;
 
 // ---------------------------------------------------------------- tests
 
+describe("heartbeat", () => {
+  it("answers a ping with the server time, without touching the database", async () => {
+    let reads = 0;
+    const get = connections.get.bind(connections);
+    connections.get = async (id) => { reads++; return get(id); };
+
+    await app.message("never-connected", JSON.stringify({ t: "ping" }));   // works even with no connection record
+    expect(push.last("never-connected", "pong")).toEqual({ t: "pong", serverTime: clock });
+    expect(reads).toBe(0);
+  });
+});
+
 describe("rooms and connections", () => {
   it("refuses $connect to a room that doesn't exist", async () => {
     expect(await app.connect("x", "ZZZZ")).toBe(false);

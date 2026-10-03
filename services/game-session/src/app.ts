@@ -127,13 +127,17 @@ export function createApp(deps: Deps) {
     const msg = parseClientMessage(raw);
     if (!msg) return void (await sendError(connectionId, "BAD_MESSAGE"));
 
+    // Heartbeats are answered before any database read: they cost one Lambda call and two messages, nothing more.
+    if (msg.t === "ping") return void (await push.send(connectionId, { t: "pong", serverTime: deps.now() }));
+
     const conn = await connections.get(connectionId);
     if (!conn) return void (await sendError(connectionId, "NO_ROOM"));
 
     await handle(conn, msg);
   }
 
-  async function handle(conn: Connection, msg: ClientMessage): Promise<void> {
+  /** Everything except heartbeats, which `message` answers before loading the connection. */
+  async function handle(conn: Connection, msg: Exclude<ClientMessage, { t: "ping" }>): Promise<void> {
     const { connectionId } = conn;
 
     // ---- lobby messages: no room needed

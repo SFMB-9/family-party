@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import {
-  Announcement, Avatar, Board, ConfirmButton, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesPanel,
+  Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesPanel,
   RulesSummary, Scoreboard, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
@@ -14,7 +14,7 @@ import { useRoom } from "../../lib/useRoom";
 /** The shared screen: TV in the living room, or a Discord screen share. */
 export default function HostPage() {
   const code = String(useParams<{ code: string }>().code).toUpperCase();
-  const { status, state, error, send, clockOffset, missingConfig } = useRoom(code, "host");
+  const { status, state, error, send, clockOffset, quality, latencyMs, missingConfig } = useRoom(code, "host");
   const [editingRules, setEditingRules] = useState(false);
   const closeRules = useCallback(() => setEditingRules(false), []);
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
@@ -41,7 +41,7 @@ export default function HostPage() {
           <CopyText className="room-code" text={code} label="el código de la sala" />
           <div className="top-right">
             {isHost && playing && <ConfirmButton label="Terminar" question="¿Terminar ya?" onConfirm={() => send({ t: "end" })} />}
-            <span className={`status status-${status}`}>{status === "open" ? "En línea" : "Reconectando…"}</span>
+            <ConnectionDot quality={quality} status={status} latencyMs={latencyMs} />
           </div>
         </header>
 

@@ -5,6 +5,7 @@ describe("parseClientMessage", () => {
   it("accepts well-formed messages", () => {
     expect(parseClientMessage('{"t":"hello"}')).toEqual({ t: "hello" });
     expect(parseClientMessage('{"t":"end"}')).toEqual({ t: "end" });
+    expect(parseClientMessage('{"t":"ping"}')).toEqual({ t: "ping" });
     expect(parseClientMessage('{"t":"rematch"}')).toEqual({ t: "rematch" });
     expect(parseClientMessage('{"t":"close"}')).toEqual({ t: "close" });
     expect(parseClientMessage('{"t":"encore"}')).toEqual({ t: "encore" });
