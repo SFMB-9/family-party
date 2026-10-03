@@ -15,6 +15,11 @@ export function hueFor(id: string): number {
   return h;
 }
 
+/** Spanish plural for a count: plural(1, "carta") → "carta", plural(3, "jugador", "jugadores") → "jugadores". */
+export const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
+/** count(1, "categoría") → "1 categoría", count(7, "categoría") → "7 categorías". */
+export const count = (n: number, one: string, many?: string) => `${n} ${plural(n, one, many)}`;
+
 /** 200 → "$200", -600 → "-$600". */
 export const money = (n: number) => (n < 0 ? `-$${-n}` : `$${n}`);
 
@@ -53,10 +58,13 @@ export function useServerNow(clockOffset: number, active: boolean) {
  * Generic pixel avatar: the player's initial on their color, in a framed square
  * like the 2023 portraits. The private Familia theme will swap in real portraits.
  */
+/** Letter size for an avatar: about ⅔ of the box, snapped to a multiple of 12 so the pixel font stays crisp. */
+const avatarFont = (size: number) => Math.max(12, Math.round((size * 0.66) / 12) * 12);
+
 export function Avatar({ id, name, size = 48 }: { id: string; name: string; size?: number }) {
   return (
-    <span className="avatar" style={{ ["--hue" as string]: hueFor(id), width: size, height: size, fontSize: Math.round(size / 2 / 12) * 12 || 12 }} aria-hidden>
-      {[...name.trim()][0]?.toUpperCase() ?? "?"}
+    <span className="avatar" style={{ ["--hue" as string]: hueFor(id), width: size, height: size, fontSize: avatarFont(size) }} aria-hidden>
+      <span className="letter-in">{[...name.trim()][0]?.toUpperCase() ?? "?"}</span>
     </span>
   );
 }
@@ -483,11 +491,40 @@ function BookletIcon() {
   );
 }
 
+/** 12×12 pixel cog: "settings" in the same hand as the booklet and chain icons. */
+function CogIcon() {
+  const art = [
+    ".....##.....",
+    ".##..##..##.",
+    ".##########.",
+    "..###..###..",
+    "..##....##..",
+    "####....####",
+    "####....####",
+    "..##....##..",
+    "..###..###..",
+    ".##########.",
+    ".##..##..##.",
+    ".....##.....",
+  ];
+  return (
+    <svg className="cog" viewBox="0 0 12 12" width="24" height="24" shapeRendering="crispEdges" aria-hidden>
+      {art.flatMap((row, y) =>
+        [...row].map((c, x) => (c === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="currentColor" /> : null)),
+      )}
+    </svg>
+  );
+}
+
 /**
  * "Reglas de esta partida" as a booklet: closed by default so the lobby stays simple,
  * but it says when the host changed something, and changed rules are gold inside.
  */
-export function RulesSummary({ rules, picks = [] }: { rules: Rules; picks?: Pick[] }) {
+export function RulesSummary({ rules, picks = [], onEdit }: {
+  rules: Rules; picks?: Pick[];
+  /** Host lobby: an "Editar" button next to the badge opens the options. */
+  onEdit?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const changed = RULE_KEYS.filter((k) => rules[k] !== DEFAULT_RULES[k]);
   const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
@@ -526,11 +563,18 @@ export function RulesSummary({ rules, picks = [] }: { rules: Rules; picks?: Pick
           ))}
         </dl>
       )}
-      <button className="booklet-toggle" aria-expanded={open} aria-controls="rules-popover" onClick={() => setOpen((o) => !o)}>
-        <BookletIcon />
-        <span className="label">{changed.length === 0 ? "Reglas clásicas" : "Reglas de la casa"}</span>
-        {changed.length > 0 && <span className="changes">{changed.length}</span>}
-      </button>
+      <div className="corner-actions">
+        <button className="booklet-toggle" aria-expanded={open} aria-controls="rules-popover" onClick={() => setOpen((o) => !o)}>
+          <BookletIcon />
+          <span className="label">{changed.length === 0 ? "Reglas clásicas" : "Reglas de la casa"}</span>
+          {changed.length > 0 && <span className="changes">{changed.length}</span>}
+        </button>
+        {onEdit && (
+          <button className="cog-btn" onClick={onEdit} title="Editar preguntas y reglas" aria-label="Editar preguntas y reglas">
+            <CogIcon />
+          </button>
+        )}
+      </div>
     </aside>
   );
 }
@@ -634,7 +678,7 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
       )}
 
       {saving === "failed" && (
-        <p className="hint warn" role="alert">No se guardó: {describeErrorText(error) ?? "el servidor no respondió"}. Intenta de nuevo.</p>
+        <p className="hint warn" role="alert">No se guardó: {(describeErrorText(error) ?? "el servidor no respondió").replace(/\.$/, "")}. Intenta de nuevo.</p>
       )}
       <div className="panel-footer">
         <button className="link-btn" disabled={defaults} onClick={reset}>Restablecer</button>
@@ -674,8 +718,8 @@ function RulesFields({ rules, players, onChange }: { rules: Rules; players: numb
         {players === 0
           ? `${rules.columns} columnas × ${rules.rows === "players" ? "1 carta por jugador" : `${rules.rows} cartas`}`
           : uneven
-            ? `${cards} cartas para ${players} jugadores: no todos tendrán los mismos turnos.`
-            : `${cards} cartas: ${cards / Math.max(players, 1)} turno${cards / Math.max(players, 1) === 1 ? "" : "s"} por jugador.`}
+            ? `${count(cards, "carta")} para ${count(players, "jugador", "jugadores")}: no todos tendrán los mismos turnos.`
+            : `${count(cards, "carta")}: ${count(cards / Math.max(players, 1), "turno")} por jugador.`}
       </p>
     </>
   );
@@ -711,9 +755,10 @@ function PicksFields({ catalog, picks, rules, players, onChange }: {
   if (playable.length === 0) summary = <span className="warn-text">Elige al menos una categoría con suficientes preguntas</span>;
   else if (rules.mixed) {
     summary = pool >= rules.columns * needed
-      ? <>Tablero mezclado: <b>{rules.columns * needed}</b> cartas de <b>{playable.length}</b> categorías</>
-      : <span className="warn-text">Solo hay {pool} preguntas para {rules.columns * needed} cartas: el tablero saldrá más chico</span>;
+      ? <>Tablero mezclado: <b>{rules.columns * needed}</b> {plural(rules.columns * needed, "carta")} de <b>{playable.length}</b> {plural(playable.length, "categoría")}</>
+      : <span className="warn-text">Solo hay {count(pool, "pregunta")} para {count(rules.columns * needed, "carta")}: el tablero saldrá más chico</span>;
   } else if (playable.length > rules.columns) summary = <>Elegidas <b>{playable.length}</b> categorías · se juegan <b>{rules.columns}</b> al azar</>;
+  else if (playable.length === 1) summary = <>Se juega <b>1</b> categoría (el tablero tendrá una columna)</>;
   else summary = <>Se juegan las <b>{playable.length}</b>{playable.length < rules.columns && " (el tablero tendrá menos columnas)"}</>;
 
   return (
@@ -743,7 +788,7 @@ function PicksFields({ catalog, picks, rules, players, onChange }: {
                       className={`chip ${on && ok ? "on" : ""} ${ok ? "" : "off-limit"}`}
                       aria-pressed={on && ok}
                       disabled={!ok}
-                      title={ok ? undefined : `Con estas reglas cada categoría necesita ${needed} preguntas`}
+                      title={ok ? undefined : `Con estas reglas cada categoría necesita ${count(needed, "pregunta")}`}
                       onClick={() => toggle(p)}
                     >
                       {c.name} <small>{ok ? c.count : `${c.count} · necesita ${needed}`}</small>
@@ -758,8 +803,8 @@ function PicksFields({ catalog, picks, rules, players, onChange }: {
       {!rules.mixed && (
         <p className="hint">
           {rules.rows === "players"
-            ? `${Math.max(players, 1)} jugador${players === 1 || players === 0 ? "" : "es"} · 1 carta por jugador: cada categoría necesita al menos ${needed} pregunta${needed === 1 ? "" : "s"}.`
-            : `${needed} cartas por categoría: cada categoría necesita al menos ${needed} preguntas.`}
+            ? `${count(Math.max(players, 1), "jugador", "jugadores")} · 1 carta por jugador: cada categoría necesita al menos ${count(needed, "pregunta")}.`
+            : `${count(needed, "carta")} por categoría: cada categoría necesita al menos ${count(needed, "pregunta")}.`}
         </p>
       )}
     </>

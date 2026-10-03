@@ -99,10 +99,9 @@ export default function HostPage() {
                       ) : (
                         <p className="waiting-players">Esperando jugadores…</p>
                       )}
-                      <button className="btn small" onClick={() => setEditingRules(true)}>Opciones</button>
                     </div>
                   )}
-                  <RulesSummary rules={view.rules} picks={view.picks} />
+                  <RulesSummary rules={view.rules} picks={view.picks} {...(isHost && { onEdit: () => setEditingRules(true) })} />
                 </>
               )}
             </div>

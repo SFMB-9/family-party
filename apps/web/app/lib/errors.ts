@@ -17,6 +17,10 @@ const MESSAGES: Record<string, string> = {
   NOT_A_PLAYER: "Únete a la partida para jugar.",
   BAD_TOKEN: "Tu sesión anterior ya no es válida. Únete de nuevo.",
   BUSY: "Mucho movimiento, intenta otra vez.",
+  // Usually the web app is one deploy ahead of the server (Vercel ships first).
+  BAD_MESSAGE: "El servidor no entendió (puede estar actualizándose). Intenta en un momento.",
+  UNKNOWN_CATEGORY: "Esa categoría ya no existe.",
+  INVALID_PICKS: "Elige al menos una categoría.",
 };
 
 export const describeError = (code: string | null) => (code ? MESSAGES[code] ?? "Algo salió mal." : null);
