@@ -1,7 +1,7 @@
 {
   "id": "clasico",
   "name": "Clásico",
-  "description": "Trivia general en siete categorías.",
+  "description": "Trivia general en siete categorías. Incluye preguntas públicas del Maratón Milanés original.",
   "questions": [
     {
       "id": "cultura-general-01",
@@ -548,6 +548,23 @@
       "stealable": true
     },
     {
+      "id": "ciencia-09",
+      "category": "Ciencia",
+      "text": "¿Qué planeta del sistema solar es el segundo más cercano al Sol?",
+      "options": [
+        "Venus",
+        "Mercurio",
+        "Marte",
+        "Tierra"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
       "id": "musica-01",
       "category": "Música",
       "text": "¿Quién compuso la Novena Sinfonía, la del «Himno a la alegría»?",
@@ -953,6 +970,57 @@
       ],
       "difficulty": 5,
       "points": 200,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-09",
+      "category": "Cine y TV",
+      "text": "Protagoniza «The Last of Us» y «The Mandalorian» en papeles paternales, por lo que lo apodan «el papá de Hollywood». ¿Quién es?",
+      "options": [
+        "Pedro Pascal",
+        "Oscar Isaac",
+        "Diego Luna",
+        "Gael García Bernal"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-10",
+      "category": "Cine y TV",
+      "text": "¿Qué actriz interpretó a «M» en las películas de James Bond protagonizadas por Daniel Craig?",
+      "options": [
+        "Judi Dench",
+        "Meryl Streep",
+        "Cate Blanchett",
+        "Helen Mirren"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 25,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-11",
+      "category": "Cine y TV",
+      "text": "¿Cuál de estos actores NUNCA ha interpretado a Bruce Wayne / Batman en el cine?",
+      "options": [
+        "Hugh Jackman",
+        "Val Kilmer",
+        "George Clooney",
+        "Robert Pattinson"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     }

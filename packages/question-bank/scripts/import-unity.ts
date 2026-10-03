@@ -1,16 +1,16 @@
 /**
  * Convert the Unity QuestionBank.asset into a pack JSON file.
  *
- *   pnpm --filter @family-party/question-bank import-unity <path/to/QuestionBank.asset> <pack-id> "<Pack name>" > packs/<pack-id>.json
+ *   pnpm --filter @family-party/question-bank import-unity <path/to/QuestionBank.asset> <pack-id> "<Pack name>" > <somewhere outside the repo>/<pack-id>.json
  *
- * Review the output (categories, correct answers, difficulty) before committing it,
- * then add the pack to PACKS in src/index.ts.
+ * Personal packs (family trivia) must NOT go into packs/: this repo is public.
+ * They belong in the private packs bucket. Only public trivia goes in packs/.
  */
 import { readFileSync } from "node:fs";
 import { importUnityAsset } from "../src/unity.ts";
 import { validatePack } from "../src/pack.ts";
 
-const [file, id = "familia", name = "Familia"] = process.argv.slice(2);
+const [file, id = "importado", name = "Importado"] = process.argv.slice(2);
 if (!file) {
   console.error("usage: import-unity <QuestionBank.asset> [pack-id] [pack name]");
   process.exit(1);

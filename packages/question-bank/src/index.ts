@@ -8,13 +8,16 @@
 import type { Question } from "@family-party/game-core";
 import type { PackInfo } from "@family-party/protocol";
 import clasico from "../packs/clasico.json";
-import familia from "../packs/familia.json";
 import { catalog as catalogOf, selectQuestions as select, type Pack, type Selection } from "./pack";
 
 export * from "./pack";
 
-/** Built-in packs. To add one: drop a JSON file in packs/ and list it here. */
-export const PACKS: Pack[] = [clasico as Pack, familia as Pack];
+/**
+ * Built-in packs: public trivia only, since this repo is public.
+ * Personal packs (family questions, private events) will live in a private
+ * S3 bucket instead, loaded by the Lambda at runtime. Never commit them here.
+ */
+export const PACKS: Pack[] = [clasico as Pack];
 
 /** The questions a room may deal from. Hidden questions are never included. */
 export function selectQuestions(selection: Selection = {}, packs: Pack[] = PACKS): Question[] {
