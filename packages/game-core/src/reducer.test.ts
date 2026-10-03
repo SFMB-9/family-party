@@ -523,3 +523,74 @@ describe("END", () => {
     expect(reduce(over, { type: "END" })).toEqual({ ok: false, error: "WRONG_PHASE" });
   });
 });
+
+// ---- after the game: ENCORE / REMATCH / CLOSE ----
+describe("after the game", () => {
+  /** Plays every card (always the right answer) until the podium. */
+  function finished(ids = ["ana", "beto"], questions = bank): GameState {
+    let s = game(ids, questions);
+    while (s.phase.kind !== "gameOver") {
+      const owner = s.players[s.turnOwner]!.id;
+      const card = s.board.find((c) => !c.played)!;
+      s = ok(pick(s, owner, card.id, 1_000));
+      s = ok(answer(s, owner, right(s, card.id), 2_000));
+    }
+    return s;
+  }
+
+  it("ENCORE collects players who want another round, once each", () => {
+    let s = finished();
+    s = ok(reduce(s, { type: "ENCORE", playerId: "beto" }));
+    s = ok(reduce(s, { type: "ENCORE", playerId: "beto" }));
+    expect(s.encore).toEqual(["beto"]);
+    expect(reduce(s, { type: "ENCORE", playerId: "zoe" })).toEqual({ ok: false, error: "UNKNOWN_PLAYER" });
+  });
+
+  it("ENCORE only on the podium", () => {
+    expect(reduce(game(["ana"]), { type: "ENCORE", playerId: "ana" })).toEqual({ ok: false, error: "WRONG_PHASE" });
+  });
+
+  it("REMATCH goes back to the lobby with the kept players at 0", () => {
+    const over = ok(reduce(finished(["ana", "beto", "caro"]), { type: "ENCORE", playerId: "ana" }));
+    const s = ok(reduce(over, { type: "REMATCH", keep: ["caro", "ana"] }));
+    expect(s.phase).toEqual({ kind: "lobby" });
+    expect(s.players.map((p) => p.id)).toEqual(["ana", "caro"]);   // join order kept, beto went home
+    expect(s.scores).toEqual({ ana: 0, caro: 0 });
+    expect(s.board).toEqual([]);
+    expect(s.reveal).toBeNull();
+    expect(s.encore).toEqual([]);
+  });
+
+  it("the next round deals questions nobody has played yet", () => {
+    const first = finished(["ana", "beto"]);
+    const firstIds = new Set(first.board.map((c) => c.questionId));
+    const lobby = ok(reduce(first, { type: "REMATCH", keep: ["ana", "beto"] }));
+    expect(new Set(lobby.played)).toEqual(firstIds);
+
+    const second = ok(reduce(lobby, { type: "START", questions: bank, seed: 1 }));   // same seed on purpose
+    expect(second.board.some((c) => firstIds.has(c.questionId))).toBe(false);
+  });
+
+  it("repeats only top up when a category runs out", () => {
+    const small = CATEGORIES.slice(0, 5).flatMap((c) => [q(c), q(c), q(c)]); // 3 per category, 2 players
+    const lobby = ok(reduce(finished(["ana", "beto"], small), { type: "REMATCH", keep: ["ana", "beto"] }));
+    const second = ok(reduce(lobby, { type: "START", questions: small, seed: 2 }));
+    for (const category of new Set(second.board.map((c) => c.category))) {
+      const ids = second.board.filter((c) => c.category === category).map((c) => c.questionId);
+      expect(ids.filter((id) => !lobby.played.includes(id))).toHaveLength(1);   // the one fresh question is used
+    }
+  });
+
+  it("REMATCH only from the podium", () => {
+    expect(reduce(game(["ana"]), { type: "REMATCH", keep: ["ana"] })).toEqual({ ok: false, error: "WRONG_PHASE" });
+  });
+
+  it("CLOSE works from any phase, once", () => {
+    for (const s of [lobbyWith("ana"), game(["ana"]), finished()]) {
+      expect(ok(reduce(s, { type: "CLOSE" })).phase).toEqual({ kind: "closed" });
+    }
+    const closed = ok(reduce(lobbyWith("ana"), { type: "CLOSE" }));
+    expect(reduce(closed, { type: "CLOSE" })).toEqual({ ok: false, error: "WRONG_PHASE" });
+    expect(reduce(closed, { type: "JOIN", player: player("late") })).toEqual({ ok: false, error: "WRONG_PHASE" });
+  });
+});

@@ -219,21 +219,39 @@ export function createApp(deps: Deps) {
           applyAction(room, { type: "START", questions: deps.questions(room.selection), seed: deps.randomInt(2 ** 31) });
         break;
       case "end":
+      case "close":
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
-        change = (room) => applyAction(room, { type: "END" });
+        change = (room) => applyAction(room, { type: msg.t === "end" ? "END" : "CLOSE" });
         break;
+      case "rematch": {
+        if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+        // Whoever still has the room open plays again; phones that went home are dropped,
+        // and so are their reconnect tokens (coming back means joining fresh).
+        const here = new Set(
+          (await connections.listByRoom(code)).flatMap((c) => (c.role === "player" && c.playerId ? [c.playerId] : [])),
+        );
+        change = (room) => {
+          const next = applyAction(room, { type: "REMATCH", keep: [...here] });
+          if (!next.ok) return next;
+          const playerTokens = Object.fromEntries(Object.entries(room.playerTokens).filter(([, id]) => here.has(id)));
+          return { ok: true, room: { ...next.room, playerTokens } };
+        };
+        break;
+      }
       case "timeout":
         // Anyone in the room may poke; game-core rejects it unless the deadline really passed.
         change = (room) => applyAction(room, { type: "TIMEOUT", at });
         break;
       case "pick":
       case "answer":
-      case "rate": {
+      case "rate":
+      case "encore": {
         if (conn.role !== "player" || !conn.playerId) return void (await sendError(connectionId, "NOT_A_PLAYER"));
         const playerId = conn.playerId;
         const action: Action =
           msg.t === "pick" ? { type: "PICK_CARD", playerId, cardId: msg.cardId, at }
           : msg.t === "answer" ? { type: "ANSWER", playerId, choice: msg.choice, at }
+          : msg.t === "encore" ? { type: "ENCORE", playerId }
           : { type: "RATE", playerId, questionId: msg.questionId, difficulty: msg.difficulty };
         change = (room) => applyAction(room, action);
         break;

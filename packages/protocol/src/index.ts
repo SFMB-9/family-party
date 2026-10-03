@@ -22,6 +22,12 @@ export type ClientMessage =
   | { t: "start" }
   /** Host only: finish now and show the podium. */
   | { t: "end" }
+  /** Host only, from the podium: same room, back to the lobby. */
+  | { t: "rematch" }
+  /** Host only: close the room; everyone goes home. */
+  | { t: "close" }
+  /** Player, from the podium: "I'd play another one." */
+  | { t: "encore" }
   | { t: "pick"; cardId: CardId }
   | { t: "answer"; choice: number }
   /** "My countdown hit zero." The server checks against its own clock. */
@@ -93,6 +99,9 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
     case "catalog":
     case "start":
     case "end":
+    case "rematch":
+    case "close":
+    case "encore":
     case "timeout":
       return { t: data.t };
     case "create": {

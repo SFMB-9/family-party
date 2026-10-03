@@ -1,10 +1,14 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Announcement, Avatar, Board, Podium, QuestionPanel, REVEAL_MS, Reveal, Scoreboard, stageOf, useServerNow } from "../../components";
+import { useCallback } from "react";
+import {
+  Announcement, Avatar, Board, ConfirmButton, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Scoreboard,
+  stageOf, useServerNow,
+} from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
+import { tokenStore } from "../../lib/storage";
 import { useRoom } from "../../lib/useRoom";
 
 /** The shared screen: TV in the living room, or a Discord screen share. */
@@ -15,6 +19,7 @@ export default function HostPage() {
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
   const revealing = !!reveal && serverNow - reveal.closedAt <= REVEAL_MS;
+  const forget = useCallback(() => tokenStore.clear(code, "host"), [code]);
 
   if (missingConfig) return <Message text="Falta NEXT_PUBLIC_WS_URL." />;
   if (status === "not-found") return <Message text={`La sala ${code} no existe o ya expiró.`} />;
@@ -32,7 +37,7 @@ export default function HostPage() {
           <h1 className="logo">Family Party</h1>
           <div className="room-code" title="Código de la sala">{code}</div>
           <div className="top-right">
-            {isHost && playing && <EndButton onEnd={() => send({ t: "end" })} />}
+            {isHost && playing && <ConfirmButton label="Terminar" question="¿Terminar ya?" onConfirm={() => send({ t: "end" })} />}
             <span className={`status status-${status}`}>{status === "open" ? "En línea" : "Reconectando…"}</span>
           </div>
         </header>
@@ -86,36 +91,27 @@ export default function HostPage() {
           </div>
         )}
 
-        {view.phase.kind === "gameOver" && !revealing && <Podium view={view} />}
+        {view.phase.kind === "gameOver" && !revealing && (
+          <Podium view={view}>
+            {isHost && (
+              <div className="after-game">
+                <EncoreList view={view} connected={connected} />
+                <div className="after-actions">
+                  <button className="btn big" onClick={() => send({ t: "rematch" })}>Otra ronda</button>
+                  <ConfirmButton label="Cerrar sala" question="¿Cerrar la sala?" onConfirm={() => send({ t: "close" })} />
+                </div>
+                <p className="hint">Misma sala, preguntas nuevas. Quien ya salió no entra; pueden unirse más.</p>
+              </div>
+            )}
+          </Podium>
+        )}
+
+        {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
       <Reveal view={view} serverNow={serverNow} />
       <Announcement view={view} holdWhile={revealing} />
     </div>
-  );
-}
-
-/**
- * Two taps, no dialog: "Terminar" turns into "¿Terminar ya? Sí / No" for a few seconds.
- * Ending can't be undone, so it gets the one confirmation in the game.
- */
-function EndButton({ onEnd }: { onEnd: () => void }) {
-  const [asking, setAsking] = useState(false);
-  useEffect(() => {
-    if (!asking) return;
-    const t = setTimeout(() => setAsking(false), 4_000);
-    return () => clearTimeout(t);
-  }, [asking]);
-
-  if (!asking) {
-    return <button className="btn small quiet" onClick={() => setAsking(true)}>Terminar</button>;
-  }
-  return (
-    <span className="end-confirm" role="group" aria-label="Confirmar fin de partida">
-      <span className="pixel-title small">¿Terminar ya?</span>
-      <button className="btn small danger" onClick={onEnd}>Sí</button>
-      <button className="btn small" onClick={() => setAsking(false)}>No</button>
-    </span>
   );
 }
 

@@ -11,7 +11,7 @@ export const MAX_NAME_LENGTH = 20;
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0,
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [],
   };
 }
 
@@ -34,6 +34,9 @@ export function reduce(state: GameState, action: Action): ReduceResult {
     case "TIMEOUT":   return timeout(state, action);
     case "RATE":      return rate(state, action);
     case "END":       return end(state);
+    case "ENCORE":    return encore(state, action);
+    case "REMATCH":   return rematch(state, action);
+    case "CLOSE":     return close(state);
     default:          return assertNever(action);
   }
 }
@@ -118,12 +121,17 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
   const columns = shuffle(qualifying, rng).slice(0, BOARD_COLUMNS);
   if (columns.length === 0) return fail("NOT_ENOUGH_QUESTIONS");
 
-  // Fill each column with distinct questions, shuffling their choices
+  // Fill each column with distinct questions, shuffling their choices.
+  // In later rounds, questions nobody has seen yet go first; repeats only top up a short column.
   const board: Card[] = [];
   const questions: Record<string, Question> = {};
+  const seen = new Set(state.played);
 
   for (const category of columns) {
-    const picked = shuffle(byCategory.get(category)!, rng).slice(0, rows);
+    const all = byCategory.get(category)!;
+    const fresh = shuffle(all.filter((q) => !seen.has(q.id)), rng);
+    const repeats = shuffle(all.filter((q) => seen.has(q.id)), rng);
+    const picked = [...fresh, ...repeats].slice(0, rows);
     picked.forEach((q, row) => {
       questions[q.id] = { ...q, response: choiceHandler.prepare(q.response, rng) };
       board.push({ id: `${category}-${row}`, category, questionId: q.id, value: stakeOf(q), played: false });
@@ -246,6 +254,45 @@ function missed(state: GameState, phase: Answering, question: Question, at: numb
 function end(state: GameState): ReduceResult {
   if (state.phase.kind !== "picking" && state.phase.kind !== "answering") return fail("WRONG_PHASE");
   return done({ ...state, phase: { kind: "gameOver" }, reveal: null });
+}
+
+// ---------------------------------------------------------------- after the game
+
+function encore(state: GameState, action: ActionOf<"ENCORE">): ReduceResult {
+  if (state.phase.kind !== "gameOver") return fail("WRONG_PHASE");
+  if (!state.players.some((p) => p.id === action.playerId)) return fail("UNKNOWN_PLAYER");
+  if (state.encore.includes(action.playerId)) return done(state); // asking twice is fine
+  return done({ ...state, encore: [...state.encore, action.playerId] });
+}
+
+/**
+ * Same room, same code, same packs: back to the lobby so latecomers can join.
+ * Only players in `keep` stay (the server passes whoever is still connected),
+ * so someone who went home doesn't get a turn nobody will take.
+ */
+function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
+  if (state.phase.kind !== "gameOver") return fail("WRONG_PHASE");
+  const keep = new Set(action.keep);
+  const players = state.players.filter((p) => keep.has(p.id));
+  const playedNow = state.board.filter((c) => c.played).map((c) => c.questionId);
+
+  return done({
+    ...state,
+    players,
+    scores: Object.fromEntries(players.map((p) => [p.id, 0])),
+    board: [],
+    questions: {},
+    turnOwner: 0,
+    phase: { kind: "lobby" },
+    reveal: null,
+    encore: [],
+    played: [...new Set([...state.played, ...playedNow])],
+  });
+}
+
+function close(state: GameState): ReduceResult {
+  if (state.phase.kind === "closed") return fail("WRONG_PHASE");
+  return done({ ...state, phase: { kind: "closed" }, reveal: null });
 }
 
 function closeCard(state: GameState, cardId: string, at: number, results: AnswerResult[]): GameState {

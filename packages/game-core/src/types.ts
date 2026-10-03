@@ -66,7 +66,9 @@ export type Phase =
       tried: PlayerId[];
       results: AnswerResult[]; // everyone who answered this card so far, in order
     }
-  | { kind: "gameOver" };
+  | { kind: "gameOver" }
+  /** The host closed the room for good: clients go home. */
+  | { kind: "closed" };
 
 /** One attempt at a card. `choice: null` means the time ran out. */
 export interface AnswerResult {
@@ -94,6 +96,10 @@ export interface GameState {
   phase: Phase;
   reveal: Reveal | null;
   seed: number;
+  /** On the podium: players who asked for another round. */
+  encore: PlayerId[];
+  /** Questions already played this session; later rounds deal fresh ones first. */
+  played: QuestionId[];
 }
 
 // ---- Actions ----
@@ -106,7 +112,13 @@ export type Action =
   | { type: "TIMEOUT"; at: number }
   | { type: "RATE"; playerId: PlayerId; questionId: QuestionId; difficulty: Difficulty }
   /** Finish early: straight to the podium with the scores as they are. */
-  | { type: "END" };
+  | { type: "END" }
+  /** From the podium: "I'd play another one." */
+  | { type: "ENCORE"; playerId: PlayerId }
+  /** From the podium: back to the lobby with whoever is still here (`keep`), scores at 0. */
+  | { type: "REMATCH"; keep: PlayerId[] }
+  /** Close the room for everyone. */
+  | { type: "CLOSE" };
 
 // ---- Result: invalid actions are expected, not exceptional ----
 export type GameError =
@@ -144,6 +156,8 @@ export interface PublicState {
   /** Only the question currently being answered, without its answer. */
   current: PublicQuestion | null;
   reveal: PublicReveal | null;
+  /** On the podium: who asked for another round. */
+  encore: PlayerId[];
 }
 
 export interface Ranking {
