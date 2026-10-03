@@ -133,7 +133,10 @@ img { image-rendering: pixelated; }
 .room-code.huge { font-size: 96px; padding: 12px 24px; background: transparent; }
 
 /* Click-to-copy text: keeps the look of what it replaces, plus a hover border and a "¡Copiado!" tag. */
-.copy-text { position: relative; border: 0; color: inherit; cursor: copy; }
+.copy-text { position: relative; border: 0; color: inherit; cursor: copy; display: inline-flex; align-items: center; gap: 8px; }
+.copy-text .chain { width: 12px; height: 12px; color: var(--gold); flex: none; }
+.phone-only { display: none; }
+@media (pointer: coarse) and (max-width: 820px) { .phone-only { display: block; } }
 .copy-text.join-url { background: none; padding: 2px 6px; color: var(--gold); }
 .copy-text:hover, .copy-text:focus-visible { outline: 3px solid var(--hilite); outline-offset: 0; }
 @media (hover: none) { .copy-text:hover { outline: none; } }

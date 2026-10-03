@@ -57,6 +57,7 @@ export default function PlayPage() {
             text={code}
             copy={typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : code}
             label="el enlace de la sala"
+            icon
             share={{
               title: "Family Party",
               text: `¡Únete a la partida! Sala ${code}`,

@@ -650,14 +650,41 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** 12×12 pixel chain link (two links, diagonal): "this is a link you can share". */
+function ChainIcon() {
+  const art = [
+    "............",
+    ".......####.",
+    "......#....#",
+    "......#....#",
+    "....#.#...#.",
+    "...#.#.#.#..",
+    "..#.#.#.#...",
+    ".#...#.#....",
+    "#....#......",
+    "#....#......",
+    ".####.......",
+    "............",
+  ];
+  return (
+    <svg className="chain" viewBox="0 0 12 12" width="12" height="12" shapeRendering="crispEdges" aria-hidden>
+      {art.flatMap((row, y) =>
+        [...row].map((c, x) => (c === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="currentColor" /> : null)),
+      )}
+    </svg>
+  );
+}
+
 /**
  * Text that copies itself when clicked (the room code, the join link), with a short
  * "¡Copiado!" so the tap visibly did something. Looks exactly like the text it replaces.
  * With `share`, phones that support it open their share menu (WhatsApp, Messages…) instead.
  */
-export function CopyText({ text, copy = text, className = "", label, share }: {
+export function CopyText({ text, copy = text, className = "", label, share, icon }: {
   text: string; copy?: string; className?: string; label: string;
   share?: { title: string; text: string; url: string };
+  /** Show a chain-link icon so it's obvious this is tappable (phones). */
+  icon?: boolean;
 }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const isLink = /^https?:\/\//.test(copy);
@@ -686,6 +713,7 @@ export function CopyText({ text, copy = text, className = "", label, share }: {
       aria-label={`${text}. Copiar ${label}`}
       onClick={onClick}
     >
+      {icon && <ChainIcon />}
       {text}
       {state !== "idle" && (
         <span className="copied" role="status">{state === "failed" ? "No se pudo copiar" : isLink ? "¡Enlace copiado!" : "¡Copiado!"}</span>
