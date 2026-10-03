@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { upgradeView } from "@family-party/game-core";
 import type { ClientMessage, ServerMessage } from "@family-party/protocol";
 import { tokenStore } from "./storage";
 
@@ -51,7 +52,8 @@ export function useRoom(code: string, kind: Kind) {
           return;
         }
         if (msg.t === "state") {
-          setState(msg);
+          // The server may be one deploy behind the web app (Vercel ships first): fill in new fields.
+          setState({ ...msg, view: upgradeView(msg.view) });
           setClockOffset(msg.serverTime - Date.now());
           setError(null);
         } else if (msg.t === "joined") {
@@ -81,7 +83,10 @@ export function useRoom(code: string, kind: Kind) {
 
   const send = useCallback((msg: ClientMessage) => {
     const ws = socketRef.current;
-    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+    if (ws?.readyState !== WebSocket.OPEN) return false;
+    setError(null); // a new action: an error from now on is about this one
+    ws.send(JSON.stringify(msg));
+    return true;
   }, []);
 
   return { status, state, error, send, clockOffset, missingConfig: !WS_URL };

@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Scoreboard, money, nameOf, stageOf, useServerNow,
+  Board, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -52,7 +52,17 @@ export default function PlayPage() {
       <main className="shell phone">
         <header className="top">
           <h1 className="logo small">Family Party</h1>
-          <span className="room-code small">{code}</span>
+          <CopyText
+            className="room-code small"
+            text={code}
+            copy={typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : code}
+            label="el enlace de la sala"
+            share={{
+              title: "Family Party",
+              text: `¡Únete a la partida! Sala ${code}`,
+              url: typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : "",
+            }}
+          />
         </header>
 
         {status !== "open" && <p className="notice">Reconectando…</p>}
@@ -82,6 +92,7 @@ export default function PlayPage() {
             <p className="pixel-title small">¡Listo!</p>
             <p className="hint">Esperando a que el anfitrión empiece…</p>
             <Scoreboard view={view} connected={connected} me={me} />
+            <RulesSummary rules={view.rules} />
           </section>
         )}
 

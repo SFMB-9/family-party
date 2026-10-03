@@ -2,6 +2,7 @@
 import { ConditionalCheckFailedException, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { ApiGatewayManagementApiClient, GoneException, PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+import { upgradeState } from "@family-party/game-core";
 import type { ServerMessage } from "@family-party/protocol";
 import type { Connection, ConnectionRepo, Push, Room, RoomRepo } from "./ports";
 
@@ -23,7 +24,9 @@ export class DynamoRooms implements RoomRepo {
     // ConsistentRead: optimistic locking needs the latest version, not a possibly stale copy.
     const { Item } = await db.send(new GetCommand({ TableName: this.table, Key: { roomCode: code }, ConsistentRead: true }));
     if (!Item) return null;
-    return { ...(JSON.parse(Item.data as string) as Omit<Room, "code" | "version">), code, version: Item.version as number };
+    const data = JSON.parse(Item.data as string) as Omit<Room, "code" | "version">;
+    // Rooms outlive deploys (12 h TTL): bring state written by older code up to date.
+    return { ...data, state: upgradeState(data.state), code, version: Item.version as number };
   }
 
   async create(room: Room): Promise<boolean> {

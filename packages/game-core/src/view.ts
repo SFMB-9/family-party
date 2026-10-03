@@ -52,6 +52,7 @@ export function publicView(state: GameState): PublicState {
     current,
     reveal,
     encore: state.encore,
+    rules: state.rules,
   };
 }
 

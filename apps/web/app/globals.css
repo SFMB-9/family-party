@@ -132,6 +132,19 @@ img { image-rendering: pixelated; }
 .room-code.small { font-size: 12px; padding: 6px 10px; }
 .room-code.huge { font-size: 96px; padding: 12px 24px; background: transparent; }
 
+/* Click-to-copy text: keeps the look of what it replaces, plus a hover border and a "¡Copiado!" tag. */
+.copy-text { position: relative; border: 0; color: inherit; cursor: copy; }
+.copy-text.join-url { background: none; padding: 2px 6px; color: var(--gold); }
+.copy-text:hover, .copy-text:focus-visible { outline: 3px solid var(--hilite); outline-offset: 0; }
+@media (hover: none) { .copy-text:hover { outline: none; } }
+.copied {
+  position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px); z-index: 6;
+  padding: 4px 8px; background: var(--gold); color: #1a1400; white-space: nowrap;
+  font-family: var(--pixel); font-size: 12px; text-transform: uppercase; animation: slide-in 160ms steps(3);
+}
+/* The phone's code sits in the top-right corner: grow the tag leftwards. */
+.room-code.small .copied { left: auto; right: 0; transform: translateY(6px); }
+
 .status { font-size: var(--t1); padding: 4px 10px; background: var(--panel); }
 .status-open { color: var(--ok); }
 .status-connecting, .status-reconnecting { color: var(--gold); }
@@ -216,6 +229,40 @@ input {
 .join-url { margin: 0; font-size: var(--t1h); color: var(--gold); }
 @media (max-width: 900px) { .lobby { grid-template-columns: 1fr; margin: 0; } }
 
+/* House rules (host lobby) */
+/* Rules booklet: a small badge in the bottom-right corner; the list pops up above it. */
+.lobby-roster { position: relative; }
+.phone .rules-corner { position: fixed; }
+.rules-corner { position: absolute; right: 16px; bottom: 16px; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.booklet-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--panel); border: 0; color: var(--muted); }
+.booklet-toggle .booklet { color: var(--frame); --page: #e8e8e8; }
+.booklet-toggle .label { font-family: var(--pixel); font-size: 12px; text-transform: uppercase; }
+.booklet-toggle .changes { min-width: 1.4em; padding: 0 4px; background: var(--gold); color: #1a1400; font-family: var(--pixel); font-size: 12px; text-align: center; }
+.booklet-toggle[aria-expanded="true"], .booklet-toggle:hover { color: #fff; }
+.booklet-toggle:hover, .booklet-toggle:focus-visible { outline: 3px solid var(--hilite); outline-offset: -3px; }
+@media (hover: none) { .booklet-toggle:hover { outline: none; } }
+.rules-popover { margin: 0; padding: 12px 14px; text-align: left; max-width: min(420px, calc(100vw - 32px)); background: var(--maroon-deep); display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; animation: slide-in 160ms steps(3); }
+.rules-popover > div { display: contents; }
+.rules-popover dt { color: var(--muted); }
+.rules-popover dd { margin: 0; color: #fff; }
+.rules-popover .changed dd { color: var(--gold); }
+
+/* Options footer: one row, same height; Restablecer is a quiet text action on the left. */
+.panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 2px solid rgba(255, 255, 255, 0.18); }
+.panel-footer-actions { display: flex; gap: 8px; }
+.link-btn { background: none; border: 0; padding: 6px 0; color: #fff; text-decoration: underline; text-underline-offset: 4px; }
+.link-btn:disabled { color: var(--muted); opacity: 0.5; text-decoration: none; }
+.rules-panel { display: flex; flex-direction: column; gap: 10px; width: min(560px, 100%); }
+.choice { display: flex; flex-direction: column; gap: 6px; }
+/* Host screen: label beside its options, so all rules + Listo fit in 720p. */
+.host .rules-panel { width: min(600px, 100%); }
+.host .choice { display: grid; grid-template-columns: 150px 1fr; align-items: center; gap: 10px; }
+.choice-label { font-family: var(--pixel); font-size: 12px; text-transform: uppercase; color: #fff; }
+.choice-options { display: flex; flex-wrap: wrap; gap: 6px; }
+.choice-options .btn.quiet { color: #e8ece9; }
+.hint.warn { color: var(--gold); }
+.waiting-players { margin: 0; font-family: var(--pixel); font-size: 12px; text-transform: uppercase; color: #fff; animation: pulse 1.6s steps(2) infinite; }
+.lobby-roster:has(.rules-panel) { gap: 12px; padding: 20px 32px; }
 .roster { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 84px); gap: 10px; }
 .roster li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--t1); text-align: center; overflow-wrap: anywhere; }
 .roster li.away { opacity: 0.45; }
@@ -236,6 +283,7 @@ input {
 .me-bar { margin: 0; display: flex; justify-content: space-between; padding: 10px 14px; background: var(--panel); font-size: 12px; text-transform: uppercase; }
 
 /* board: flat grey value cards; played cards go dark and textured */
+.board.mixed .card { min-height: 64px; }
 .board { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; }
 .column { display: flex; flex-direction: column; gap: 8px; }
 .category { min-height: 3.2em; display: grid; place-items: center; text-align: center; font-size: 12px; text-transform: uppercase; line-height: 1.4; padding: 6px 4px; overflow-wrap: normal; hyphens: auto; }
