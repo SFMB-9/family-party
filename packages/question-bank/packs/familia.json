@@ -1,0 +1,24 @@
+{
+  "id": "familia",
+  "name": "Familia",
+  "description": "Preguntas sobre nuestra familia. Importadas del banco de Unity de 2023; agrega más aquí.",
+  "questions": [
+    {
+      "id": "familia-boda-matere-pa",
+      "category": "Familia",
+      "text": "¿Cuándo se casaron Matere y Pa Salvador?",
+      "options": [
+        "24 abril 1965",
+        "14 abril 1965",
+        "14 agosto 1965",
+        "24 agosto 1965"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 10,
+      "stealable": true
+    }
+  ]
+}

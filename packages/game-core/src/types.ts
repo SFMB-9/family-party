@@ -4,9 +4,11 @@ export type CardId = string;
 export type QuestionId = string;
 
 // ---- Basics ----
-export type Category =
-  | "general" | "family" | "geography" | "history"
-  | "music" | "cinema" | "sports" | "science"
+/**
+ * Free-form so custom packs can bring their own ("La boda de Ana").
+ * The built-in packs (packages/question-bank) define their own labels.
+ */
+export type Category = string;
 
 export type Difficulty = 1 | 2 | 3 | 4 | 5;
 
