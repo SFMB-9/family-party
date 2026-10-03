@@ -4,8 +4,10 @@
  *
  *  - One background color per phase (teal board, maroon question, charcoal lobby/podium):
  *    anyone glancing at the stream knows what's happening.
- *  - Salva's hand-drawn pixel font for titles, numbers, names and buttons ONLY.
- *    Questions and answers use a plain font: they must be readable through video compression.
+ *  - Two pixel fonts, both drawn on a grid so they stay crisp:
+ *      Salva's hand-drawn "Milanes Pixel" for titles, numbers and buttons (short, loud);
+ *      Jersey 10 (OFL) for questions, answers and anything long (readable through compression).
+ *    Both at 1px or 2px "pixels" side by side, so neither looks foreign next to the other.
  *  - Flat grey cards and chunky light-grey buttons, square corners, framed square avatars.
  */
 
@@ -15,9 +17,31 @@
   font-display: swap;
 }
 
+/* Jersey 10 by The Soft Type Project, SIL OFL 1.1 (license in /fonts/Jersey10-OFL.txt). */
+@font-face {
+  font-family: "Jersey 10";
+  src: url("/fonts/jersey-10-latin.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Jersey 10";
+  src: url("/fonts/jersey-10-latin-ext.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --pixel: "Milanes Pixel", ui-monospace, monospace;
-  --text: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text: "Jersey 10", ui-sans-serif, system-ui, sans-serif;
+
+  /*
+   * Jersey 10's grid: 1 pixel = 75/1400 em, so it's crisp at multiples of 18.667px.
+   * (Milanes Pixel: multiples of 12px.) Only these sizes for running text:
+   */
+  --t1: 18.667px;   /* 1px pixels: hints, names, small print  (≈ Milanes 12px) */
+  --t1h: 28px;      /* 1.5px: phone questions/answers; exact on 2× screens */
+  --t2: 37.333px;   /* 2px pixels: host questions/answers     (≈ Milanes 24px) */
 
   /* stage colors (from the 2023 screenshots) */
   --teal: #0f4a3c;
@@ -54,7 +78,13 @@ html, body {
   background: var(--charcoal);
   color: var(--text-color);
   font-family: var(--text);
+  font-size: var(--t1);
+  line-height: 1.25;
+  font-synthesis: none;   /* both fonts have one weight; faux bold smears the pixels */
 }
+
+/* No bold in a pixel font: emphasis is brighter ink instead. */
+strong, b { font-weight: 400; color: #fff; }
 
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; }
@@ -102,7 +132,7 @@ img { image-rendering: pixelated; }
 .room-code.small { font-size: 12px; padding: 6px 10px; }
 .room-code.huge { font-size: 96px; padding: 12px 24px; background: transparent; }
 
-.status { font-size: 0.8rem; padding: 4px 10px; background: var(--panel); }
+.status { font-size: var(--t1); padding: 4px 10px; background: var(--panel); }
 .status-open { color: var(--ok); }
 .status-connecting, .status-reconnecting { color: var(--gold); }
 
@@ -145,7 +175,7 @@ input {
   border: 2px solid #3d4a47;
   background: var(--charcoal);
   color: var(--text-color);
-  font-size: 1rem; /* 16px+ stops iOS from zooming into the field */
+  font-size: var(--t1h); /* 16px+ stops iOS from zooming into the field */
 }
 
 /* ------------------------------------------------------------ home */
@@ -162,7 +192,7 @@ input {
 .chip.on { background: var(--sage); border-color: var(--sage); color: #fff; }
 
 .join { margin-top: 6vh; }
-.join input { font-size: 1.2rem; }
+.join input { font-size: var(--t1h); }
 
 /* ------------------------------------------------------------ avatar */
 
@@ -183,15 +213,16 @@ input {
 .lobby { display: grid; grid-template-columns: 1fr 1fr; flex: 1; margin: 12px -32px -24px; }
 .lobby-join { background: var(--charcoal); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center; }
 .lobby-roster { background: var(--sage); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 32px; }
-.join-url { margin: 0; font-size: 1.4rem; color: var(--gold); }
+.join-url { margin: 0; font-size: var(--t1h); color: var(--gold); }
 @media (max-width: 900px) { .lobby { grid-template-columns: 1fr; margin: 0; } }
 
 .roster { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 84px); gap: 10px; }
-.roster li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.85rem; text-align: center; overflow-wrap: anywhere; }
+.roster li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--t1); text-align: center; overflow-wrap: anywhere; }
 .roster li.away { opacity: 0.45; }
 .roster .empty-slot { width: 72px; height: 72px; background: rgba(0, 0, 0, 0.35); justify-self: center; }
 
 .waiting { display: flex; flex-direction: column; gap: 12px; text-align: center; margin-top: 4vh; }
+.waiting .scores { text-align: left; }
 
 /* ------------------------------------------------------------ game */
 
@@ -210,7 +241,7 @@ input {
 .category { min-height: 3.2em; display: grid; place-items: center; text-align: center; font-size: 12px; text-transform: uppercase; line-height: 1.4; padding: 6px 4px; overflow-wrap: normal; hyphens: auto; }
 .host .category { min-height: 4em; }
 /* Phones: five pixel-font columns don't fit long names; the readable sans wraps cleanly. */
-.phone .category { font-family: var(--text); font-weight: 700; font-size: 11px; letter-spacing: 0; min-height: 4em; }
+.phone .category { font-family: var(--text); font-size: var(--t1); line-height: 1; min-height: 3em; }
 /* The lobby already shows the code huge; don't repeat it in the header. */
 [data-stage="lobby"] .host .top .room-code { visibility: hidden; }
 .card {
@@ -250,12 +281,12 @@ input {
   padding: 20px;
   background: var(--card);
   color: var(--card-ink);
-  font-size: 1.35rem;
+  font-size: var(--t1h);
   line-height: 1.35;
   min-height: 6em;
   box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.15);
 }
-.host .question h2 { font-size: 2.4rem; min-height: 5em; padding: 32px; }
+.host .question h2 { font-size: var(--t2); min-height: 5em; padding: 32px; }
 .question .who { margin: 0; color: var(--muted); }
 .question .who.steal { color: var(--gold); }
 .question .media { max-width: 100%; max-height: 40vh; align-self: center; }
@@ -273,10 +304,10 @@ input {
   border-radius: 0;
   background: var(--card);
   color: var(--card-ink);
-  font-size: 1.05rem;
+  font-size: var(--t1h);
   box-shadow: inset -4px -4px 0 rgba(0, 0, 0, 0.15);
 }
-.host .option { font-size: 1.7rem; padding: 22px; min-height: 96px; }
+.host .option { font-size: var(--t2); padding: 22px; min-height: 96px; }
 .phone .option:disabled { opacity: 0.55; } /* watchers see the options, clearly not theirs to tap */
 .option:not(:disabled):active { background: var(--gold); }
 .letter { font-size: 12px; opacity: 0.7; }
@@ -286,12 +317,12 @@ input {
 .scores { list-style: none; margin: 0; padding: 10px; background: var(--panel); display: flex; flex-direction: column; gap: 6px; }
 .scores li { display: grid; grid-template-columns: 1.4em auto 1fr auto; align-items: center; gap: 10px; padding: 6px 8px; }
 .scores li.turn { background: rgba(255, 207, 74, 0.14); }
-.scores li.me .name { font-weight: 700; }
+.scores li.me .name { color: #fff; }
 .scores li.away { opacity: 0.45; }
 .scores .rank { font-size: 12px; color: var(--muted); }
 .scores .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scores .score { font-size: 12px; position: relative; }
-.host .scores li { font-size: 1.15rem; }
+.host .scores li { font-size: var(--t1h); }
 .host .scores .score { font-size: 24px; }
 
 /* the old Adder / Substracter: "+$100" floats up, "-$50" sinks */
@@ -322,7 +353,7 @@ input {
 .reveal { width: min(860px, 100%); max-height: 100%; overflow: auto; background: var(--maroon-deep); padding: 20px; display: flex; flex-direction: column; gap: 14px; animation: slide-in 220ms steps(4); }
 .reveal header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .headline { font-size: 24px; text-transform: uppercase; }
-.reveal h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; color: var(--muted); font-weight: 500; }
+.reveal h2 { margin: 0; font-size: var(--t1h); line-height: 1.2; color: var(--muted); font-weight: 400; }
 .reveal-options { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .reveal-options li {
   display: grid;
@@ -333,7 +364,7 @@ input {
   background: rgba(255, 255, 255, 0.06);
   color: var(--muted);
 }
-.reveal-options li.right { background: var(--ok); color: #0f1a08; font-weight: 700; }
+.reveal-options li.right { background: var(--ok); color: #0f1a08; }
 .reveal-options li.wrong { background: rgba(172, 50, 50, 0.35); color: #fff; }
 .reveal-options .mark { width: 32px; height: 32px; grid-column: 1; }
 .reveal-options li.right .mark { filter: brightness(0); opacity: 0.7; }
@@ -344,9 +375,11 @@ input {
 .deltas strong { font-family: var(--pixel); font-weight: 400; font-size: 12px; }
 .deltas .up strong { color: var(--ok); }
 .deltas .down strong { color: #ff7a7a; }
-.host .reveal h2 { font-size: 1.8rem; }
-.host .reveal-options li { font-size: 1.5rem; padding: 14px 16px; }
-.host .headline { font-size: 36px; }
+/* Overlays render outside .shell.host, so host sizing hangs off the stage wrapper. */
+.host-screen .reveal { width: min(1100px, 100%); padding: 28px; }
+.host-screen .reveal h2 { font-size: var(--t2); }
+.host-screen .reveal-options li { font-size: var(--t2); padding: 14px 16px; }
+.host-screen .headline { font-size: 36px; }
 
 /* ------------------------------------------------------------ podium */
 
