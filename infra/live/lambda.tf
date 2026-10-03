@@ -29,8 +29,14 @@ resource "aws_iam_role" "game_session" {
 data "aws_iam_policy_document" "game_session" {
   statement {
     sid       = "Connections"
-    actions   = ["dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:Scan"]
-    resources = [aws_dynamodb_table.connections.arn]
+    actions   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:DeleteItem", "dynamodb:Query"]
+    resources = [aws_dynamodb_table.connections.arn, "${aws_dynamodb_table.connections.arn}/index/byRoom"]
+  }
+
+  statement {
+    sid       = "Rooms"
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem"]
+    resources = [aws_dynamodb_table.rooms.arn]
   }
 
   statement {
@@ -73,6 +79,7 @@ resource "aws_lambda_function" "game_session" {
     variables = {
       CONNECTIONS_TABLE = aws_dynamodb_table.connections.name
       NODE_OPTIONS      = "--enable-source-maps" # readable stack traces from the sourcemap
+      ROOMS_TABLE       = aws_dynamodb_table.rooms.name
     }
   }
 

@@ -40,7 +40,7 @@ export function publicView(state: GameState): PublicState {
 }
 
 /** Highest score first. Ties share a rank (1, 1, 3), unlike the Unity version. */
-export function rankings(state: GameState): Ranking[] {
+export function rankings(state: Pick<GameState, "players" | "scores">): Ranking[] {
   const sorted = [...state.players]
     .map((player) => ({ player, score: state.scores[player.id] ?? 0 }))
     .sort((a, b) => b.score - a.score);

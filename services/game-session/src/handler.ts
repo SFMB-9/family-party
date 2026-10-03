@@ -1,76 +1,52 @@
 /**
- * Walking-skeleton WebSocket handler: no game yet, just plumbing.
- *
- *   $connect     → remember the connection
- *   $disconnect  → forget it
- *   $default     → broadcast the message to every connection
- *
- * One Lambda handles all three routes; API Gateway tells us which one
- * fired in `requestContext.routeKey`.
+ * Lambda entry point: wires the real adapters into the app and maps API Gateway events to it.
+ * All behavior lives in app.ts (tested without AWS); this file is glue only.
  */
+import { createHash, randomBytes, randomInt } from "node:crypto";
 import type { APIGatewayProxyResultV2, APIGatewayProxyWebsocketEventV2 } from "aws-lambda";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DeleteCommand, DynamoDBDocumentClient, PutCommand, ScanCommand } from "@aws-sdk/lib-dynamodb";
-import {
-  ApiGatewayManagementApiClient,
-  GoneException,
-  PostToConnectionCommand,
-} from "@aws-sdk/client-apigatewaymanagementapi";
-import { expiresAt, makeEnvelope, managementEndpoint } from "./envelope";
+import { catalog, selectQuestions } from "@family-party/question-bank";
+import { createApp } from "./app";
+import { ApiGatewayPush, DynamoConnections, DynamoRooms } from "./dynamo";
+import { managementEndpoint } from "./endpoint";
 
-const TABLE = process.env.CONNECTIONS_TABLE;
-if (!TABLE) throw new Error("CONNECTIONS_TABLE env var is not set");
+const required = (name: string) => {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} env var is not set`);
+  return value;
+};
 
-// Created once per Lambda container and reused across invocations (faster warm starts).
-const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const rooms = new DynamoRooms(required("ROOMS_TABLE"));
+const connections = new DynamoConnections(required("CONNECTIONS_TABLE"));
 
-export async function handler(event: APIGatewayProxyWebsocketEventV2): Promise<APIGatewayProxyResultV2> {
+/** $connect events carry the query string (?room=ABCD); the v2 type doesn't declare it. */
+type WebsocketEvent = APIGatewayProxyWebsocketEventV2 & { queryStringParameters?: Record<string, string | undefined> };
+
+export async function handler(event: WebsocketEvent): Promise<APIGatewayProxyResultV2> {
   const { routeKey, connectionId, domainName, stage } = event.requestContext;
-  const now = Date.now();
+
+  const app = createApp({
+    rooms,
+    connections,
+    push: new ApiGatewayPush(managementEndpoint(domainName, stage)),
+    now: () => Date.now(),
+    randomInt: (max) => randomInt(max),
+    randomToken: () => randomBytes(24).toString("base64url"),
+    // Only hashes are stored: a leaked table doesn't let anyone impersonate a player.
+    hash: (token) => createHash("sha256").update(token).digest("hex"),
+    questions: (selection) => selectQuestions(selection),
+    catalog: () => catalog(),
+  });
 
   switch (routeKey) {
-    case "$connect":
-      await db.send(new PutCommand({
-        TableName: TABLE,
-        Item: { connectionId, connectedAt: now, expiresAt: expiresAt(now) },
-      }));
-      break;
-
+    case "$connect": {
+      const accepted = await app.connect(connectionId, event.queryStringParameters?.room);
+      return { statusCode: accepted ? 200 : 403 };
+    }
     case "$disconnect":
-      await db.send(new DeleteCommand({ TableName: TABLE, Key: { connectionId } }));
-      break;
-
-    default: {
-      const envelope = makeEnvelope(connectionId, event.body, now);
-      await broadcast(managementEndpoint(domainName, stage), JSON.stringify(envelope));
-    }
+      await app.disconnect(connectionId);
+      return { statusCode: 200 };
+    default:
+      await app.message(connectionId, event.body);
+      return { statusCode: 200 };
   }
-
-  // For $connect, a non-2xx status would reject the connection.
-  return { statusCode: 200 };
-}
-
-async function broadcast(endpoint: string, payload: string): Promise<void> {
-  const api = new ApiGatewayManagementApiClient({ endpoint });
-
-  // A Scan reads the whole table. Fine for a skeleton with a handful of
-  // connections; the real game will look up connections by room instead.
-  const { Items = [] } = await db.send(new ScanCommand({
-    TableName: TABLE,
-    ProjectionExpression: "connectionId",
-  }));
-
-  await Promise.all(Items.map(async ({ connectionId }) => {
-    try {
-      await api.send(new PostToConnectionCommand({ ConnectionId: connectionId, Data: payload }));
-    } catch (err) {
-      // 410 Gone: the client vanished without a clean $disconnect (phone slept,
-      // tab closed). Drop it so we stop trying.
-      if (err instanceof GoneException) {
-        await db.send(new DeleteCommand({ TableName: TABLE, Key: { connectionId } }));
-      } else {
-        throw err;
-      }
-    }
-  }));
 }

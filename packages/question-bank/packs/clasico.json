@@ -1,0 +1,960 @@
+{
+  "id": "clasico",
+  "name": "Clásico",
+  "description": "Trivia general en siete categorías.",
+  "questions": [
+    {
+      "id": "cultura-general-01",
+      "category": "Cultura general",
+      "text": "¿Cuántos días tiene un año bisiesto?",
+      "options": [
+        "366",
+        "365",
+        "364",
+        "367"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-02",
+      "category": "Cultura general",
+      "text": "¿Quién pintó «La noche estrellada»?",
+      "options": [
+        "Vincent van Gogh",
+        "Claude Monet",
+        "Pablo Picasso",
+        "Salvador Dalí"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-03",
+      "category": "Cultura general",
+      "text": "¿Quién escribió «Cien años de soledad»?",
+      "options": [
+        "Gabriel García Márquez",
+        "Mario Vargas Llosa",
+        "Julio Cortázar",
+        "Octavio Paz"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-04",
+      "category": "Cultura general",
+      "text": "¿Cuál es la lengua materna más hablada del mundo?",
+      "options": [
+        "Chino mandarín",
+        "Inglés",
+        "Español",
+        "Hindi"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-05",
+      "category": "Cultura general",
+      "text": "¿Qué pintora mexicana es famosa por sus autorretratos?",
+      "options": [
+        "Frida Kahlo",
+        "Remedios Varo",
+        "Leonora Carrington",
+        "María Izquierdo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-06",
+      "category": "Cultura general",
+      "text": "¿Cuántos lados tiene un hexágono?",
+      "options": [
+        "6",
+        "5",
+        "7",
+        "8"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-07",
+      "category": "Cultura general",
+      "text": "¿Cuál es el metal más abundante en la corteza terrestre?",
+      "options": [
+        "Aluminio",
+        "Hierro",
+        "Cobre",
+        "Oro"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 25,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-08",
+      "category": "Cultura general",
+      "text": "¿En qué país está la Torre inclinada de Pisa?",
+      "options": [
+        "Italia",
+        "Francia",
+        "España",
+        "Grecia"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-01",
+      "category": "Geografía",
+      "text": "¿Cuál es el río más largo de América del Sur?",
+      "options": [
+        "Amazonas",
+        "Paraná",
+        "Orinoco",
+        "Magdalena"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-02",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Australia?",
+      "options": [
+        "Canberra",
+        "Sídney",
+        "Melbourne",
+        "Perth"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-03",
+      "category": "Geografía",
+      "text": "¿Cuántas entidades federativas tiene México?",
+      "options": [
+        "32",
+        "31",
+        "30",
+        "33"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-04",
+      "category": "Geografía",
+      "text": "¿Cuál es el país más grande del mundo por superficie?",
+      "options": [
+        "Rusia",
+        "Canadá",
+        "China",
+        "Estados Unidos"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-05",
+      "category": "Geografía",
+      "text": "¿Qué océano está entre África y Australia?",
+      "options": [
+        "Índico",
+        "Atlántico",
+        "Pacífico",
+        "Ártico"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-06",
+      "category": "Geografía",
+      "text": "¿Cuál es el volcán más alto de México?",
+      "options": [
+        "Pico de Orizaba",
+        "Popocatépetl",
+        "Iztaccíhuatl",
+        "Nevado de Toluca"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-07",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Canadá?",
+      "options": [
+        "Ottawa",
+        "Toronto",
+        "Vancouver",
+        "Montreal"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-08",
+      "category": "Geografía",
+      "text": "¿En qué continente está Egipto?",
+      "options": [
+        "África",
+        "Asia",
+        "Europa",
+        "Oceanía"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-01",
+      "category": "Historia",
+      "text": "¿En qué año comenzó la Independencia de México?",
+      "options": [
+        "1810",
+        "1821",
+        "1910",
+        "1789"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-02",
+      "category": "Historia",
+      "text": "¿Quién fue el primer presidente de Estados Unidos?",
+      "options": [
+        "George Washington",
+        "Abraham Lincoln",
+        "Thomas Jefferson",
+        "John Adams"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-03",
+      "category": "Historia",
+      "text": "¿En qué año cayó el Muro de Berlín?",
+      "options": [
+        "1989",
+        "1991",
+        "1985",
+        "1961"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-04",
+      "category": "Historia",
+      "text": "¿Qué civilización construyó Machu Picchu?",
+      "options": [
+        "Inca",
+        "Maya",
+        "Mexica",
+        "Olmeca"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-05",
+      "category": "Historia",
+      "text": "¿En qué año llegó Cristóbal Colón a América?",
+      "options": [
+        "1492",
+        "1521",
+        "1498",
+        "1453"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-06",
+      "category": "Historia",
+      "text": "¿Quién gobernaba Tenochtitlan cuando llegó Hernán Cortés?",
+      "options": [
+        "Moctezuma II",
+        "Cuauhtémoc",
+        "Cuitláhuac",
+        "Itzcóatl"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-07",
+      "category": "Historia",
+      "text": "¿En qué año terminó la Segunda Guerra Mundial?",
+      "options": [
+        "1945",
+        "1944",
+        "1939",
+        "1950"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-08",
+      "category": "Historia",
+      "text": "¿Qué imperio construyó el Coliseo?",
+      "options": [
+        "Romano",
+        "Griego",
+        "Otomano",
+        "Bizantino"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-01",
+      "category": "Ciencia",
+      "text": "¿Cuál es el símbolo químico del oro?",
+      "options": [
+        "Au",
+        "Ag",
+        "Or",
+        "Go"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-02",
+      "category": "Ciencia",
+      "text": "¿Qué planeta es conocido como el planeta rojo?",
+      "options": [
+        "Marte",
+        "Júpiter",
+        "Venus",
+        "Mercurio"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-03",
+      "category": "Ciencia",
+      "text": "¿Cuántos huesos tiene el cuerpo humano adulto?",
+      "options": [
+        "206",
+        "212",
+        "198",
+        "230"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-04",
+      "category": "Ciencia",
+      "text": "¿Qué gas absorben las plantas para hacer la fotosíntesis?",
+      "options": [
+        "Dióxido de carbono",
+        "Oxígeno",
+        "Nitrógeno",
+        "Hidrógeno"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-05",
+      "category": "Ciencia",
+      "text": "¿Cuál es el planeta más grande del sistema solar?",
+      "options": [
+        "Júpiter",
+        "Saturno",
+        "Neptuno",
+        "Tierra"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-06",
+      "category": "Ciencia",
+      "text": "¿A qué temperatura hierve el agua al nivel del mar?",
+      "options": [
+        "100 °C",
+        "90 °C",
+        "120 °C",
+        "80 °C"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-07",
+      "category": "Ciencia",
+      "text": "¿Quién formuló la teoría de la relatividad?",
+      "options": [
+        "Albert Einstein",
+        "Isaac Newton",
+        "Nikola Tesla",
+        "Stephen Hawking"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-08",
+      "category": "Ciencia",
+      "text": "¿Cuál es el órgano más grande del cuerpo humano?",
+      "options": [
+        "La piel",
+        "El hígado",
+        "Los pulmones",
+        "El intestino"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-01",
+      "category": "Música",
+      "text": "¿Quién compuso la Novena Sinfonía, la del «Himno a la alegría»?",
+      "options": [
+        "Ludwig van Beethoven",
+        "Wolfgang Amadeus Mozart",
+        "Johann Sebastian Bach",
+        "Antonio Vivaldi"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-02",
+      "category": "Música",
+      "text": "¿Quién compuso «Las cuatro estaciones»?",
+      "options": [
+        "Antonio Vivaldi",
+        "Johann Sebastian Bach",
+        "Georg Friedrich Händel",
+        "Joseph Haydn"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-03",
+      "category": "Música",
+      "text": "¿Quién compuso el ballet «El cascanueces»?",
+      "options": [
+        "Piotr Ilich Chaikovski",
+        "Nikolái Rimski-Kórsakov",
+        "Ígor Stravinski",
+        "Serguéi Prokófiev"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-04",
+      "category": "Música",
+      "text": "¿Qué grupo grabó originalmente «Take Five»?",
+      "options": [
+        "The Dave Brubeck Quartet",
+        "Miles Davis Quintet",
+        "John Coltrane Quartet",
+        "Duke Ellington Orchestra"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-05",
+      "category": "Música",
+      "text": "¿De qué país es originaria la bossa nova?",
+      "options": [
+        "Brasil",
+        "Cuba",
+        "Argentina",
+        "Portugal"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-06",
+      "category": "Música",
+      "text": "¿Cuántas cuerdas tiene una guitarra estándar?",
+      "options": [
+        "6",
+        "4",
+        "5",
+        "7"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-07",
+      "category": "Música",
+      "text": "¿A quién llaman «el Rey del Pop»?",
+      "options": [
+        "Michael Jackson",
+        "Elvis Presley",
+        "Prince",
+        "Freddie Mercury"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-08",
+      "category": "Música",
+      "text": "¿Quién compuso la opereta «El murciélago»?",
+      "options": [
+        "Johann Strauss II",
+        "Franz Schubert",
+        "Richard Wagner",
+        "Gustav Mahler"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 25,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-01",
+      "category": "Cine y TV",
+      "text": "¿Quién dirigió la película «Roma» (2018)?",
+      "options": [
+        "Alfonso Cuarón",
+        "Guillermo del Toro",
+        "Alejandro G. Iñárritu",
+        "Carlos Reygadas"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-02",
+      "category": "Cine y TV",
+      "text": "¿Cómo se llama el vaquero de «Toy Story»?",
+      "options": [
+        "Woody",
+        "Buzz",
+        "Jessie",
+        "Rex"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-03",
+      "category": "Cine y TV",
+      "text": "¿En qué ciudad vive la familia Simpson?",
+      "options": [
+        "Springfield",
+        "Shelbyville",
+        "Quahog",
+        "South Park"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-04",
+      "category": "Cine y TV",
+      "text": "¿Qué película de Pixar está inspirada en el Día de Muertos?",
+      "options": [
+        "Coco",
+        "Encanto",
+        "Luca",
+        "Up"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-05",
+      "category": "Cine y TV",
+      "text": "¿Quién interpretó a Jack en «Titanic»?",
+      "options": [
+        "Leonardo DiCaprio",
+        "Brad Pitt",
+        "Matt Damon",
+        "Johnny Depp"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-06",
+      "category": "Cine y TV",
+      "text": "¿Cómo se llama la escuela de magia de Harry Potter?",
+      "options": [
+        "Hogwarts",
+        "Durmstrang",
+        "Beauxbatons",
+        "Ilvermorny"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-07",
+      "category": "Cine y TV",
+      "text": "¿Qué película ganó el primer Óscar a Mejor Película Animada?",
+      "options": [
+        "Shrek",
+        "Monsters, Inc.",
+        "El viaje de Chihiro",
+        "La era de hielo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 25,
+      "stealable": true
+    },
+    {
+      "id": "deportes-01",
+      "category": "Deportes",
+      "text": "¿Cuántos jugadores tiene un equipo de fútbol en la cancha?",
+      "options": [
+        "11",
+        "10",
+        "9",
+        "12"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-02",
+      "category": "Deportes",
+      "text": "¿En qué país se jugó el primer Mundial de fútbol, en 1930?",
+      "options": [
+        "Uruguay",
+        "Brasil",
+        "Italia",
+        "Argentina"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-03",
+      "category": "Deportes",
+      "text": "¿Cuántos anillos tiene la bandera olímpica?",
+      "options": [
+        "5",
+        "4",
+        "6",
+        "7"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-04",
+      "category": "Deportes",
+      "text": "¿Cuántos minutos dura un partido de fútbol reglamentario, sin tiempo añadido?",
+      "options": [
+        "90",
+        "80",
+        "100",
+        "120"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-05",
+      "category": "Deportes",
+      "text": "¿Qué estadio fue sede de las finales de los Mundiales de 1970 y 1986?",
+      "options": [
+        "Estadio Azteca",
+        "Estadio Jalisco",
+        "Estadio Olímpico Universitario",
+        "Estadio Cuauhtémoc"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-06",
+      "category": "Deportes",
+      "text": "¿Cuántos puntos vale un tiro desde fuera de la línea de tres en baloncesto?",
+      "options": [
+        "3",
+        "2",
+        "4",
+        "1"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-07",
+      "category": "Deportes",
+      "text": "¿En qué deporte brilló Fernando Valenzuela?",
+      "options": [
+        "Béisbol",
+        "Fútbol",
+        "Boxeo",
+        "Baloncesto"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-08",
+      "category": "Deportes",
+      "text": "¿Cada cuántos años se celebran los Juegos Olímpicos de verano?",
+      "options": [
+        "4",
+        "2",
+        "3",
+        "5"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-avatar",
+      "category": "Cine y TV",
+      "text": "¿Cuál de estos personajes NO pertenece a la serie «Avatar: La leyenda de Aang»?",
+      "options": [
+        "Obito Uchiha",
+        "Poppy Beifong",
+        "On Ji",
+        "Aang"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
+      "points": 200,
+      "timeLimitSec": 20,
+      "stealable": true
+    }
+  ]
+}

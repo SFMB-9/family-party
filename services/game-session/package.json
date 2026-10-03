@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/dev-server.ts",
     "build": "node build.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -12,12 +13,18 @@
   "devDependencies": {
     "@types/aws-lambda": "^8.10.164",
     "@types/node": "^22.20.5",
+    "@types/ws": "^8.18.2",
     "esbuild": "^0.28.2",
-    "vitest": "^5.0.3"
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.3",
+    "ws": "^8.22.0"
   },
   "dependencies": {
     "@aws-sdk/client-apigatewaymanagementapi": "^3.1145.0",
     "@aws-sdk/client-dynamodb": "^3.1145.0",
-    "@aws-sdk/lib-dynamodb": "^3.1145.0"
+    "@aws-sdk/lib-dynamodb": "^3.1145.0",
+    "@family-party/game-core": "workspace:*",
+    "@family-party/protocol": "workspace:*",
+    "@family-party/question-bank": "workspace:*"
   }
 }

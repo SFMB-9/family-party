@@ -24,6 +24,17 @@ resource "aws_dynamodb_table" "connections" {
     type = "S"
   }
 
+  attribute {
+    name = "roomCode"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "byRoom"
+    hash_key        = "roomCode"
+    projection_type = "ALL"
+  }
+
   ttl {
     attribute_name = "expiresAt" # the handler sets it to now + 2h
     enabled        = true
