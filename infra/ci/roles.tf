@@ -81,6 +81,18 @@ data "aws_iam_policy_document" "apply" {
     actions   = ["budgets:*"]
     resources = ["arn:aws:budgets::${local.account_id}:budget/family-party-*"]
   }
+  statement {
+    sid = "PacksBucket"
+    actions = [
+      "s3:CreateBucket",
+      "s3:DeleteBucket",
+      "s3:PutBucket*",
+      "s3:DeleteBucketPolicy",
+      "s3:PutEncryptionConfiguration",
+      "s3:PutLifecycleConfiguration",
+    ]
+    resources = ["arn:aws:s3:::family-party-packs-*"]
+  }
 }
 
 resource "aws_iam_role_policy" "apply" {

@@ -44,11 +44,25 @@ data "aws_iam_policy_document" "game_session" {
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
     resources = ["${aws_cloudwatch_log_group.game_session.arn}:*"]
   }
-
   statement {
     sid       = "PushToClients"
     actions   = ["execute-api:ManageConnections"]
     resources = ["${aws_apigatewayv2_api.ws.execution_arn}/${aws_apigatewayv2_stage.dev.name}/POST/@connections/*"]
+  }
+  statement {
+    sid       = "PacksList" # see which packs exist, only under packs/
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.packs.arn]
+    condition {
+      test     = "StringLike"
+      variable = "s3:prefix"
+      values   = ["packs/*"]
+    }
+  }
+  statement {
+    sid       = "PacksRead"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.packs.arn}/packs/*"]
   }
 }
 
@@ -80,6 +94,7 @@ resource "aws_lambda_function" "game_session" {
       CONNECTIONS_TABLE = aws_dynamodb_table.connections.name
       NODE_OPTIONS      = "--enable-source-maps" # readable stack traces from the sourcemap
       ROOMS_TABLE       = aws_dynamodb_table.rooms.name
+      PACKS_BUCKET      = aws_s3_bucket.packs.bucket
     }
   }
 
