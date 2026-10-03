@@ -416,6 +416,7 @@ input {
 .reveal header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .headline { font-size: 24px; text-transform: uppercase; }
 .headline.mine { color: var(--gold); }
+.headline.missed { color: #e05a5a; }
 .reveal h2 { margin: 0; font-size: var(--t1h); line-height: 1.2; color: var(--muted); font-weight: 400; }
 .reveal-options { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .reveal-options li {

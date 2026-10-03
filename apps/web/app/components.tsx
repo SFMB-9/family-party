@@ -213,15 +213,21 @@ export function Reveal({ view, serverNow, onClose, me }: {
   const pickedBy = (i: number) => reveal.results.filter((r) => r.choice === i);
   const timedOut = reveal.results.filter((r) => r.choice === null);
   const winner = reveal.results.find((r) => r.delta > 0);
+  // On a phone: did this player try and miss (wrong answer or ran out of time)?
+  const iMissed = !!me && reveal.results.some((r) => r.playerId === me && r.delta <= 0);
+  const iWon = !!me && winner?.playerId === me; // TV has no `me`: undefined === undefined must not count
+  const headline = iWon
+    ? { text: "¡Acertaste!", tone: "mine" }
+    : iMissed
+      ? { text: winner ? `¡Lástima! ${nameOf(view, winner.playerId)} acertó` : "¡Lástima!", tone: "missed" }
+      : { text: winner ? `¡${nameOf(view, winner.playerId)} acertó!` : "Nadie acertó", tone: "" };
 
   return (
     <div className="overlay" onClick={onClose} role="status">
       <section className="reveal">
         <header>
           <span className="tag">{reveal.category}</span>
-          <span className={`headline ${winner && winner.playerId === me ? "mine" : ""}`}>
-            {!winner ? "Nadie acertó" : winner.playerId === me ? "¡Acertaste!" : `¡${nameOf(view, winner.playerId)} acertó!`}
-          </span>
+          <span className={`headline ${headline.tone}`}>{headline.text}</span>
         </header>
         <h2>{reveal.text}</h2>
         <ul className="reveal-options">
