@@ -202,7 +202,11 @@ export function QuestionPanel({
 export const REVEAL_MS = 5_000;
 
 /** After a card closes: the right answer, who picked what, and the points. Non-blocking: play continues underneath. */
-export function Reveal({ view, serverNow, onClose }: { view: PublicState; serverNow: number; onClose?: () => void }) {
+export function Reveal({ view, serverNow, onClose, me }: {
+  view: PublicState; serverNow: number; onClose?: () => void;
+  /** On a phone: the player looking at it, so their own win reads "¡Acertaste!". */
+  me?: PlayerId | null;
+}) {
   const reveal = view.reveal;
   if (!reveal || serverNow - reveal.closedAt > REVEAL_MS) return null;
 
@@ -215,7 +219,9 @@ export function Reveal({ view, serverNow, onClose }: { view: PublicState; server
       <section className="reveal">
         <header>
           <span className="tag">{reveal.category}</span>
-          <span className="headline">{winner ? `¡${nameOf(view, winner.playerId)} acertó!` : "Nadie acertó"}</span>
+          <span className={`headline ${winner && winner.playerId === me ? "mine" : ""}`}>
+            {!winner ? "Nadie acertó" : winner.playerId === me ? "¡Acertaste!" : `¡${nameOf(view, winner.playerId)} acertó!`}
+          </span>
         </header>
         <h2>{reveal.text}</h2>
         <ul className="reveal-options">

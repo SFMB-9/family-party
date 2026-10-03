@@ -134,7 +134,7 @@ export default function PlayPage() {
         {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
-      {revealing && <Reveal view={view} serverNow={serverNow} onClose={() => setDismissed(reveal!.closedAt)} />}
+      {revealing && <Reveal view={view} serverNow={serverNow} me={me} onClose={() => setDismissed(reveal!.closedAt)} />}
     </div>
   );
 }
