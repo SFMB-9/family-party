@@ -8,7 +8,8 @@
 import type { Question } from "@family-party/game-core";
 import type { PackInfo } from "@family-party/protocol";
 import clasico from "../packs/clasico.json";
-import { catalog as catalogOf, selectQuestions as select, type Pack, type Selection } from "./pack";
+import type { Pick } from "@family-party/game-core";
+import { allPicks as allPicksOf, catalog as catalogOf, picksExist as picksExistIn, selectQuestions as select, type Pack, type Selection } from "./pack";
 
 export * from "./pack";
 
@@ -27,4 +28,13 @@ export function selectQuestions(selection: Selection = {}, packs: Pack[] = PACKS
 /** What the lobby shows: pack names and category sizes. Never includes answers. */
 export function catalog(packs: Pack[] = PACKS): PackInfo[] {
   return catalogOf(packs);
+}
+
+/** A new room starts with every public category picked. */
+export function defaultPicks(packs: Pack[] = PACKS): Pick[] {
+  return allPicksOf(packs);
+}
+
+export function picksExist(picks: Pick[], packs: Pack[] = PACKS): boolean {
+  return picksExistIn(picks, packs);
 }

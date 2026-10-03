@@ -24,6 +24,7 @@ import {
   type ProtocolError,
 } from "@family-party/protocol";
 import type { Selection } from "@family-party/question-bank";
+import type { Pick } from "@family-party/game-core";
 import type { Connection, ConnectionRepo, Push, Room, RoomRepo } from "./ports";
 
 export interface Deps {
@@ -37,6 +38,10 @@ export interface Deps {
   hash: (token: string) => string;
   questions: (selection: Selection) => Question[];
   catalog: () => PackInfo[];
+  /** What a new room starts with: every public category. */
+  defaultPicks: () => Pick[];
+  /** Do these picks name categories that exist? */
+  picksExist: (picks: Pick[]) => boolean;
 }
 
 type AppError = GameError | ProtocolError;
@@ -94,6 +99,18 @@ export function createApp(deps: Deps) {
       }),
     );
   }
+
+  /**
+   * A new room's state: categories are picked in the lobby now, so it starts with every public
+   * category, or with what an older web client still sends on create (the deploy window).
+   */
+  const startingState = (selection: Selection) => {
+    const packs = selection.packs?.length ? new Set(selection.packs) : null;
+    const categories = selection.categories?.length ? new Set(selection.categories) : null;
+    const picks = deps.defaultPicks().filter((p) => (!packs || packs.has(p.pack)) && (!categories || categories.has(p.category)));
+    const result = reduce(initialState(), { type: "SET_PICKS", picks });
+    return result.ok ? result.state : initialState();
+  };
 
   const newRoomCode = () =>
     Array.from({ length: ROOM_CODE_LENGTH }, () => ROOM_CODE_ALPHABET[deps.randomInt(ROOM_CODE_ALPHABET.length)]).join("");
@@ -158,7 +175,7 @@ export function createApp(deps: Deps) {
         const created = await rooms.create({
           code,
           version: 0,
-          state: initialState(),
+          state: startingState(selection),
           selection,
           hostTokenHash: deps.hash(hostToken),
           playerTokens: {},
@@ -220,13 +237,25 @@ export function createApp(deps: Deps) {
       case "start":
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
         change = (room) =>
-          applyAction(room, { type: "START", questions: deps.questions(room.selection), seed: deps.randomInt(2 ** 31) });
+          applyAction(room, {
+            type: "START",
+            // Rooms from before lobby picks have none: they keep dealing from their home-page selection.
+            questions: deps.questions(room.state.picks.length ? { picks: room.state.picks } : room.selection),
+            seed: deps.randomInt(2 ** 31),
+          });
         break;
       case "end":
       case "close":
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
         change = (room) => applyAction(room, { type: msg.t === "end" ? "END" : "CLOSE" });
         break;
+      case "picks": {
+        if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+        if (!deps.picksExist(msg.picks)) return void (await sendError(connectionId, "UNKNOWN_CATEGORY"));
+        const picks = msg.picks;
+        change = (room) => applyAction(room, { type: "SET_PICKS", picks });
+        break;
+      }
       case "rules": {
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
         const rules = msg.rules;

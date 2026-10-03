@@ -6,6 +6,8 @@ describe("parseClientMessage", () => {
     expect(parseClientMessage('{"t":"hello"}')).toEqual({ t: "hello" });
     expect(parseClientMessage('{"t":"end"}')).toEqual({ t: "end" });
     expect(parseClientMessage('{"t":"ping"}')).toEqual({ t: "ping" });
+    expect(parseClientMessage('{"t":"picks","picks":[{"pack":"clasico","category":"Historia","x":1}]}'))
+      .toEqual({ t: "picks", picks: [{ pack: "clasico", category: "Historia" }] });
     expect(parseClientMessage('{"t":"rematch"}')).toEqual({ t: "rematch" });
     expect(parseClientMessage('{"t":"close"}')).toEqual({ t: "close" });
     expect(parseClientMessage('{"t":"encore"}')).toEqual({ t: "encore" });
@@ -35,6 +37,8 @@ describe("parseClientMessage", () => {
     '{"t":"hello","token":42}',
     '{"t":"create","packs":"clasico"}',
     '{"t":"rules"}',
+    '{"t":"picks","picks":"Historia"}',
+    '{"t":"picks","picks":[{"pack":"clasico"}]}',
     '{"t":"rules","rules":[1]}',
     '{"t":"rules","rules":{"columns":{"nested":1}}}',
     "x".repeat(5_000),

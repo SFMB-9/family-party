@@ -12,7 +12,7 @@ export const MAX_NAME_LENGTH = 20;
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES,
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES, picks: [],
   };
 }
 
@@ -39,6 +39,7 @@ export function reduce(state: GameState, action: Action): ReduceResult {
     case "REMATCH":   return rematch(state, action);
     case "CLOSE":     return close(state);
     case "SET_RULES": return setRules(state, action);
+    case "SET_PICKS": return setPicks(state, action);
     default:          return assertNever(action);
   }
 }
@@ -308,6 +309,17 @@ function setRules(state: GameState, action: ActionOf<"SET_RULES">): ReduceResult
   if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
   const rules = applyRules(state.rules, action.rules);
   return rules ? done({ ...state, rules }) : fail("INVALID_RULES");
+}
+
+export const MAX_PICKS = 60;
+
+/** At least one, at most MAX_PICKS, no duplicates. Whether they exist is the server's check. */
+function setPicks(state: GameState, action: ActionOf<"SET_PICKS">): ReduceResult {
+  if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
+  const { picks } = action;
+  const keys = new Set(picks.map((p) => `${p.pack}\u0000${p.category}`));
+  if (picks.length === 0 || picks.length > MAX_PICKS || keys.size !== picks.length) return fail("INVALID_PICKS");
+  return done({ ...state, picks: picks.map(({ pack, category }) => ({ pack, category })) });
 }
 
 function close(state: GameState): ReduceResult {

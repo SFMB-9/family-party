@@ -54,6 +54,12 @@ export interface Card {
   column: number;      // where it sits on the board (0-based); a mixed board has no category columns
 }
 
+/** A category the host picked for this room. game-core only stores it; the server turns picks into questions. */
+export interface Pick {
+  pack: string;
+  category: string;
+}
+
 /** House rules, chosen by the host in the lobby. */
 export interface Rules {
   /** Wrong answer: lose the stake, nothing happens, or lose it but never below $0. */
@@ -120,6 +126,8 @@ export interface GameState {
   /** Questions already played this session; later rounds deal fresh ones first. */
   played: QuestionId[];
   rules: Rules;
+  /** Categories the host picked. Empty only in rooms created before picks existed. */
+  picks: Pick[];
 }
 
 // ---- Actions ----
@@ -140,14 +148,16 @@ export type Action =
   /** Close the room for everyone. */
   | { type: "CLOSE" }
   /** Lobby only: change some house rules. Invalid values reject the whole change. */
-  | { type: "SET_RULES"; rules: Partial<Record<keyof Rules, unknown>> };
+  | { type: "SET_RULES"; rules: Partial<Record<keyof Rules, unknown>> }
+  /** Lobby only: which categories this room plays (the server has checked they exist). */
+  | { type: "SET_PICKS"; picks: Pick[] };
 
 // ---- Result: invalid actions are expected, not exceptional ----
 export type GameError =
   | "WRONG_PHASE" | "NOT_YOUR_TURN" | "UNKNOWN_PLAYER" | "UNKNOWN_CARD" | "UNKNOWN_QUESTION"
   | "CARD_ALREADY_PLAYED" | "INVALID_ANSWER" | "INVALID_RATING" | "TOO_EARLY" | "TOO_LATE"
   | "NOT_ENOUGH_PLAYERS" | "NOT_ENOUGH_QUESTIONS" | "ALREADY_JOINED" | "ROOM_FULL"
-  | "NOT_ANSWERED_YET" | "INVALID_NAME" | "NAME_TAKEN" | "INVALID_RULES";
+  | "NOT_ANSWERED_YET" | "INVALID_NAME" | "NAME_TAKEN" | "INVALID_RULES" | "INVALID_PICKS";
 
 export type ReduceResult =
   | { ok: true; state: GameState }
@@ -181,6 +191,7 @@ export interface PublicState {
   /** On the podium: who asked for another round. */
   encore: PlayerId[];
   rules: Rules;
+  picks: Pick[];
 }
 
 export interface Ranking {

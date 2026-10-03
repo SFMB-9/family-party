@@ -7,7 +7,8 @@ import { MemoryConnections, MemoryPush, MemoryRooms } from "./memory";
 // ---------------------------------------------------------------- test harness
 
 /** 3 categories × 4 questions, 10s timer, answer "A" is always right. */
-const BANK: Question[] = ["Uno", "Dos", "Tres"].flatMap((category) =>
+const CATEGORIES = ["Uno", "Dos", "Tres"];
+const BANK: Question[] = CATEGORIES.flatMap((category) =>
   [0, 1, 2, 3].map((i) => ({
     id: `${category}-${i}`,
     category,
@@ -41,8 +42,11 @@ beforeEach(() => {
     randomInt: (max) => counter++ % max,
     randomToken: () => `token-${counter++}-xxxxxxxxxxxxxxxxxxxx`,
     hash: (t) => createHash("sha256").update(t).digest("hex"),
-    questions: () => BANK,
-    catalog: () => [{ id: "test", name: "Test", description: "", categories: [{ name: "Uno", count: 4 }] }],
+    questions: (selection) =>
+      selection.picks ? BANK.filter((q) => selection.picks!.some((p) => p.category === q.category)) : BANK,
+    catalog: () => [{ id: "test", name: "Test", description: "", categories: CATEGORIES.map((name) => ({ name, count: 4 })) }],
+    defaultPicks: () => CATEGORIES.map((category) => ({ pack: "test", category })),
+    picksExist: (picks) => picks.every((p) => p.pack === "test" && CATEGORIES.includes(p.category)),
   });
 });
 
@@ -249,6 +253,29 @@ describe("bad input", () => {
     await app.connect("x", undefined);
     await send("x", { t: "join", name: "Ana" });
     expect(errorOf("x")).toBe("NO_ROOM");
+  });
+});
+
+describe("picking categories", () => {
+  it("a new room starts with every category picked", async () => {
+    await createRoom();
+    expect(stateOf("host").view.picks).toEqual(CATEGORIES.map((category) => ({ pack: "test", category })));
+  });
+
+  it("only the host changes them, only to categories that exist, and the deal follows them", async () => {
+    const { code } = await createRoom();
+    await joinAs("ana", code, "Ana");
+    await send("ana", { t: "picks", picks: [{ pack: "test", category: "Dos" }] });
+    expect(errorOf("ana")).toBe("NOT_HOST");
+
+    await send("host", { t: "picks", picks: [{ pack: "test", category: "Cuatro" }] });
+    expect(errorOf("host")).toBe("UNKNOWN_CATEGORY");
+
+    await send("host", { t: "picks", picks: [{ pack: "test", category: "Dos" }] });
+    expect(stateOf("ana").view.picks).toEqual([{ pack: "test", category: "Dos" }]);
+
+    await send("host", { t: "start" });
+    expect(new Set(stateOf("ana").view.board.map((c) => c.category))).toEqual(new Set(["Dos"]));
   });
 });
 

@@ -53,6 +53,7 @@ export function publicView(state: GameState): PublicState {
     reveal,
     encore: state.encore,
     rules: state.rules,
+    picks: state.picks,
   };
 }
 
