@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "plan_state" {
     resources = ["${local.state_arn}/live/*"]
   }
   statement {
-    sid       = "LockFileOnly"   # plan takes a lock, but can never overwrite the state itself
+    sid       = "LockFileOnly" # plan takes a lock, but can never overwrite the state itself
     actions   = ["s3:PutObject", "s3:DeleteObject"]
     resources = ["${local.state_arn}/live/terraform.tfstate.tflock"]
   }
@@ -39,7 +39,7 @@ resource "aws_iam_role" "apply" {
 
 resource "aws_iam_role_policy_attachment" "apply_readonly" {
   role       = aws_iam_role.apply.name
-  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"   # Describe/List calls during refresh
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess" # Describe/List calls during refresh
 }
 
 data "aws_iam_policy_document" "apply" {
@@ -67,12 +67,12 @@ data "aws_iam_policy_document" "apply" {
     ]
   }
   statement {
-    sid       = "ApiGateway"   # API Gateway ARNs contain no name or account, so it can't be narrowed further
+    sid       = "ApiGateway" # API Gateway ARNs contain no name or account, so it can't be narrowed further
     actions   = ["apigateway:*"]
     resources = ["arn:aws:apigateway:${local.region}::/*"]
   }
   statement {
-    sid       = "IamForAppRoles"   # only roles named family-party-*, never the github-* CI roles
+    sid       = "IamForAppRoles" # only roles named family-party-*, never the github-* CI roles
     actions   = ["iam:*Role*", "iam:PassRole"]
     resources = ["arn:aws:iam::${local.account_id}:role/family-party-*"]
   }
@@ -89,5 +89,5 @@ resource "aws_iam_role_policy" "apply" {
   policy = data.aws_iam_policy_document.apply.json
 }
 
-output "plan_role_arn"  { value = aws_iam_role.plan.arn }
+output "plan_role_arn" { value = aws_iam_role.plan.arn }
 output "apply_role_arn" { value = aws_iam_role.apply.arn }
