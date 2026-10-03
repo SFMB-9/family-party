@@ -1,6 +1,6 @@
 resource "aws_apigatewayv2_api" "ws" {
-  name                       = "family-party-ws"
-  protocol_type              = "WEBSOCKET"
+  name          = "family-party-ws"
+  protocol_type = "WEBSOCKET"
   # Messages like {"action":"pick"} would go to a route named "pick";
   # anything else goes to $default. We only use $default for now.
   route_selection_expression = "$request.body.action"
@@ -24,12 +24,12 @@ resource "aws_apigatewayv2_route" "routes" {
 resource "aws_apigatewayv2_stage" "dev" {
   api_id      = aws_apigatewayv2_api.ws.id
   name        = "dev"
-  auto_deploy = true   # every change to routes/integrations goes live without a manual "deploy"
+  auto_deploy = true # every change to routes/integrations goes live without a manual "deploy"
 
   # A ceiling on traffic: protects your bill if someone hammers the endpoint.
   default_route_settings {
     throttling_burst_limit = 50
-    throttling_rate_limit  = 20   # messages per second, across all connections
+    throttling_rate_limit  = 20 # messages per second, across all connections
   }
 }
 

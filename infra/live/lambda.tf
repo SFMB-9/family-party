@@ -61,9 +61,9 @@ resource "aws_cloudwatch_log_group" "game_session" {
 resource "aws_lambda_function" "game_session" {
   function_name    = local.game_session_name
   role             = aws_iam_role.game_session.arn
-  runtime          = "nodejs22.x"        # matches target: "node22" in build.mjs
-  handler          = "index.handler"     # dist/index.mjs → export handler
-  architectures    = ["arm64"]           # Graviton: ~20% cheaper; plain JS runs on either
+  runtime          = "nodejs22.x"    # matches target: "node22" in build.mjs
+  handler          = "index.handler" # dist/index.mjs → export handler
+  architectures    = ["arm64"]       # Graviton: ~20% cheaper; plain JS runs on either
   filename         = data.archive_file.game_session.output_path
   source_code_hash = data.archive_file.game_session.output_base64sha256
   memory_size      = 256
@@ -72,7 +72,7 @@ resource "aws_lambda_function" "game_session" {
   environment {
     variables = {
       CONNECTIONS_TABLE = aws_dynamodb_table.connections.name
-      NODE_OPTIONS      = "--enable-source-maps"   # readable stack traces from the sourcemap
+      NODE_OPTIONS      = "--enable-source-maps" # readable stack traces from the sourcemap
     }
   }
 

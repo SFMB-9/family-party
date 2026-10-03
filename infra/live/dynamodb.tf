@@ -25,7 +25,7 @@ resource "aws_dynamodb_table" "connections" {
   }
 
   ttl {
-    attribute_name = "expiresAt"   # the handler sets it to now + 2h
+    attribute_name = "expiresAt" # the handler sets it to now + 2h
     enabled        = true
   }
 }
