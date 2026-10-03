@@ -1,17 +1,18 @@
 import { createRng, shuffle } from "./random";
 import { choiceHandler } from "./handlers/choice";
+import { DEFAULT_RULES, RULE_LIMITS, applyRules, rowsFor } from "./rules";
 import type {
-  Action, AnswerResult, Card, Category, Difficulty, GameError, GameState, Phase, PlayerId, Question, ReduceResult,
+  Action, AnswerResult, Card, Category, Difficulty, GameError, GameState, Phase, PlayerId, Question, ReduceResult, Rules,
 } from "./types";
 
 export const MAX_PLAYERS = 10;    // same as Unity
-export const BOARD_COLUMNS = 5;   // categories per board
+export const BOARD_COLUMNS = DEFAULT_RULES.columns;   // categories per board, unless the host changes it
 export const MAX_NAME_LENGTH = 20;
 
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [],
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES,
   };
 }
 
@@ -37,6 +38,7 @@ export function reduce(state: GameState, action: Action): ReduceResult {
     case "ENCORE":    return encore(state, action);
     case "REMATCH":   return rematch(state, action);
     case "CLOSE":     return close(state);
+    case "SET_RULES": return setRules(state, action);
     default:          return assertNever(action);
   }
 }
@@ -100,41 +102,51 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
   if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
   if (state.players.length < 1) return fail("NOT_ENOUGH_PLAYERS");
 
-  const rows = state.players.length;
+  const { rules } = state;
+  const rows = rowsFor(rules, state.players.length);
   const rng = createRng(action.seed);
 
-  // Group the bank by category
-  const byCategory = new Map<Category, Question[]>();
-  for (const q of action.questions) {
-    const list = byCategory.get(q.category) ?? [];
-    list.push(q);
-    byCategory.set(q.category, list);
-  }
+  // In later rounds, questions nobody has seen yet go first; repeats only top up.
+  const seen = new Set(state.played);
+  const freshFirst = (list: Question[]) => [
+    ...shuffle(list.filter((q) => !seen.has(q.id)), rng),
+    ...shuffle(list.filter((q) => seen.has(q.id)), rng),
+  ];
 
-  // Keep categories that can fill a whole column (one card per player).
-  // Sorted so the result doesn't depend on the order questions arrived in.
-  const qualifying = [...byCategory.keys()]
-    .filter((c) => byCategory.get(c)!.length >= rows)
-    .sort();
-
-  // Pick up to 5 columns at random
-  const columns = shuffle(qualifying, rng).slice(0, BOARD_COLUMNS);
-  if (columns.length === 0) return fail("NOT_ENOUGH_QUESTIONS");
-
-  // Fill each column with distinct questions, shuffling their choices.
-  // In later rounds, questions nobody has seen yet go first; repeats only top up a short column.
   const board: Card[] = [];
   const questions: Record<string, Question> = {};
-  const seen = new Set(state.played);
+  const deal = (q: Question, column: number, id: string) => {
+    questions[q.id] = { ...q, response: choiceHandler.prepare(q.response, rng) };
+    board.push({ id, category: q.category, questionId: q.id, value: stakeOf(q), played: false, column });
+  };
 
-  for (const category of columns) {
-    const all = byCategory.get(category)!;
-    const fresh = shuffle(all.filter((q) => !seen.has(q.id)), rng);
-    const repeats = shuffle(all.filter((q) => seen.has(q.id)), rng);
-    const picked = [...fresh, ...repeats].slice(0, rows);
-    picked.forEach((q, row) => {
-      questions[q.id] = { ...q, response: choiceHandler.prepare(q.response, rng) };
-      board.push({ id: `${category}-${row}`, category, questionId: q.id, value: stakeOf(q), played: false });
+  if (rules.mixed) {
+    // No category columns: any questions, shuffled across a columns × rows grid.
+    const cells = shuffle(freshFirst(action.questions).slice(0, rules.columns * rows), rng);
+    if (cells.length === 0) return fail("NOT_ENOUGH_QUESTIONS");
+    cells.forEach((q, i) => deal(q, i % rules.columns, `cell-${i}`));
+  } else {
+    // Group the bank by category
+    const byCategory = new Map<Category, Question[]>();
+    for (const q of action.questions) {
+      const list = byCategory.get(q.category) ?? [];
+      list.push(q);
+      byCategory.set(q.category, list);
+    }
+
+    // Keep categories that can fill a whole column.
+    // Sorted so the result doesn't depend on the order questions arrived in.
+    const qualifying = [...byCategory.keys()]
+      .filter((c) => byCategory.get(c)!.length >= rows)
+      .sort();
+
+    const columns = shuffle(qualifying, rng).slice(0, rules.columns);
+    if (columns.length === 0) return fail("NOT_ENOUGH_QUESTIONS");
+
+    columns.forEach((category, column) => {
+      freshFirst(byCategory.get(category)!)
+        .slice(0, rows)
+        .forEach((q, row) => deal(q, column, `${category}-${row}`));
     });
   }
 
@@ -163,7 +175,7 @@ function pickCard(state: GameState, action: ActionOf<"PICK_CARD">): ReduceResult
       cardId: card.id,
       answerer: action.playerId,
       stake: stakeOf(question),
-      deadline: deadlineFrom(action.at, question),
+      deadline: deadlineFrom(action.at, timeLimitMs(state.rules, question)),
       tried: [],
       results: [],
     },
@@ -180,7 +192,7 @@ function answer(state: GameState, action: ActionOf<"ANSWER">): ReduceResult {
   if (!choiceHandler.isValidAnswer(question.response, action.choice)) return fail("INVALID_ANSWER");
 
   const correct = choiceHandler.isCorrect(question.response, action.choice);
-  const delta = correct ? phase.stake : -phase.stake;
+  const delta = correct ? phase.stake : penalty(state.rules, phase.stake, state.scores[action.playerId] ?? 0);
   const results = [...phase.results, { playerId: action.playerId, choice: action.choice, delta }];
 
   const scored: GameState = {
@@ -224,8 +236,10 @@ function rate(state: GameState, action: ActionOf<"RATE">): ReduceResult {
 
 /** After a miss or a timeout: hand the question to the next player, or close it. */
 function missed(state: GameState, phase: Answering, question: Question, at: number, results: AnswerResult[]): GameState {
+  const { rules } = state;
   const tried = [...phase.tried, phase.answerer];
-  const next = question.stealable ? nextUntried(state.players.map((p) => p.id), phase.answerer, tried) : null;
+  const canSteal = rules.steals !== "off" && question.stealable;
+  const next = canSteal ? nextUntried(state.players.map((p) => p.id), phase.answerer, tried) : null;
 
   if (next === null) return closeCard(state, phase.cardId, at, results);
 
@@ -234,8 +248,8 @@ function missed(state: GameState, phase: Answering, question: Question, at: numb
     phase: {
       ...phase,
       answerer: next,
-      stake: Math.floor(phase.stake / 2),
-      deadline: deadlineFrom(at, question),
+      stake: rules.steals === "full" ? phase.stake : Math.floor(phase.stake / 2),
+      deadline: stealDeadline(rules, phase, question, at),
       tried,
       results,
     },
@@ -290,6 +304,12 @@ function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
   });
 }
 
+function setRules(state: GameState, action: ActionOf<"SET_RULES">): ReduceResult {
+  if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
+  const rules = applyRules(state.rules, action.rules);
+  return rules ? done({ ...state, rules }) : fail("INVALID_RULES");
+}
+
 function close(state: GameState): ReduceResult {
   if (state.phase.kind === "closed") return fail("WRONG_PHASE");
   return done({ ...state, phase: { kind: "closed" }, reveal: null });
@@ -333,8 +353,44 @@ export function stakeOf(question: Question): number {
   return question.points ?? question.difficulty * 100;
 }
 
-function deadlineFrom(at: number, question: Question): number | null {
-  return question.timeLimitMs !== null ? at + question.timeLimitMs : null;
+/** The answer time this room uses for a question, in ms; null = no limit. */
+function timeLimitMs(rules: Rules, question: Question): number | null {
+  if (rules.timer === "off") return null;
+  if (rules.timer === "question") return question.timeLimitMs;
+  return rules.timer * 1000;
+}
+
+function deadlineFrom(at: number, limitMs: number | null): number | null {
+  return limitMs !== null ? at + limitMs : null;
+}
+
+/**
+ * How long the stealer gets. "remaining" inherits what the last player had left
+ * (a timeout leaves nothing, hence the floor); "half" is half a fresh timer.
+ */
+function stealDeadline(rules: Rules, phase: Answering, question: Question, at: number): number | null {
+  const limit = timeLimitMs(rules, question);
+  if (limit === null) return null;
+  switch (rules.stealTime) {
+    case "fresh":
+      return at + limit;
+    case "half":
+      return at + Math.max(RULE_LIMITS.minStealMs, Math.floor(limit / 2));
+    case "remaining":
+      return at + Math.max(RULE_LIMITS.minStealMs, phase.deadline !== null ? phase.deadline - at : limit);
+  }
+}
+
+/** Points change for a wrong answer (≤ 0). */
+function penalty(rules: Rules, stake: number, score: number): number {
+  switch (rules.wrongAnswer) {
+    case "lose":
+      return -stake;
+    case "keep":
+      return 0;
+    case "floor":
+      return 0 - Math.min(stake, Math.max(0, score)); // never below $0 (and never -0)
+  }
 }
 
 function isDifficulty(x: unknown): x is Difficulty {

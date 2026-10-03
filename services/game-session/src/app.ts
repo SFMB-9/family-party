@@ -223,6 +223,12 @@ export function createApp(deps: Deps) {
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
         change = (room) => applyAction(room, { type: msg.t === "end" ? "END" : "CLOSE" });
         break;
+      case "rules": {
+        if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+        const rules = msg.rules;
+        change = (room) => applyAction(room, { type: "SET_RULES", rules });
+        break;
+      }
       case "rematch": {
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
         // Whoever still has the room open plays again; phones that went home are dropped,

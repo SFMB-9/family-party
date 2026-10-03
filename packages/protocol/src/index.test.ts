@@ -8,6 +8,8 @@ describe("parseClientMessage", () => {
     expect(parseClientMessage('{"t":"rematch"}')).toEqual({ t: "rematch" });
     expect(parseClientMessage('{"t":"close"}')).toEqual({ t: "close" });
     expect(parseClientMessage('{"t":"encore"}')).toEqual({ t: "encore" });
+    expect(parseClientMessage('{"t":"rules","rules":{"steals":"off","columns":3,"mixed":true}}'))
+      .toEqual({ t: "rules", rules: { steals: "off", columns: 3, mixed: true } });
     expect(parseClientMessage('{"t":"hello","token":"abc"}')).toEqual({ t: "hello", token: "abc" });
     expect(parseClientMessage('{"t":"join","name":"Ana"}')).toEqual({ t: "join", name: "Ana" });
     expect(parseClientMessage('{"t":"pick","cardId":"Historia-0"}')).toEqual({ t: "pick", cardId: "Historia-0" });
@@ -31,6 +33,9 @@ describe("parseClientMessage", () => {
     '{"t":"pick"}',
     '{"t":"hello","token":42}',
     '{"t":"create","packs":"clasico"}',
+    '{"t":"rules"}',
+    '{"t":"rules","rules":[1]}',
+    '{"t":"rules","rules":{"columns":{"nested":1}}}',
     "x".repeat(5_000),
   ])("rejects %j", (raw) => {
     expect(parseClientMessage(raw)).toBeNull();

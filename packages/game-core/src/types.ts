@@ -51,6 +51,25 @@ export interface Card {
   questionId: QuestionId;
   value: number;       // stake when opened, shown on the board ($100–$500); steals halve it from there
   played: boolean;
+  column: number;      // where it sits on the board (0-based); a mixed board has no category columns
+}
+
+/** House rules, chosen by the host in the lobby. */
+export interface Rules {
+  /** Wrong answer: lose the stake, nothing happens, or lose it but never below $0. */
+  wrongAnswer: "lose" | "keep" | "floor";
+  /** Seconds per answer: each question's own limit, a fixed one for all, or none. */
+  timer: "question" | 15 | 20 | 30 | "off";
+  /** A missed question passes to the next player at half or full value, or not at all. */
+  steals: "off" | "half" | "full";
+  /** Time the stealer gets: a fresh timer, whatever the last player had left, or half a timer. */
+  stealTime: "fresh" | "remaining" | "half";
+  /** Category columns on the board (3–5). */
+  columns: number;
+  /** Cards per column: one per player (everyone gets the same turns) or a fixed count. */
+  rows: "players" | number;
+  /** No category columns: cards shuffled across the grid, category shown only when opened. */
+  mixed: boolean;
 }
 
 // ---- Game state ----
@@ -100,6 +119,7 @@ export interface GameState {
   encore: PlayerId[];
   /** Questions already played this session; later rounds deal fresh ones first. */
   played: QuestionId[];
+  rules: Rules;
 }
 
 // ---- Actions ----
@@ -118,14 +138,16 @@ export type Action =
   /** From the podium: back to the lobby with whoever is still here (`keep`), scores at 0. */
   | { type: "REMATCH"; keep: PlayerId[] }
   /** Close the room for everyone. */
-  | { type: "CLOSE" };
+  | { type: "CLOSE" }
+  /** Lobby only: change some house rules. Invalid values reject the whole change. */
+  | { type: "SET_RULES"; rules: Partial<Record<keyof Rules, unknown>> };
 
 // ---- Result: invalid actions are expected, not exceptional ----
 export type GameError =
   | "WRONG_PHASE" | "NOT_YOUR_TURN" | "UNKNOWN_PLAYER" | "UNKNOWN_CARD" | "UNKNOWN_QUESTION"
   | "CARD_ALREADY_PLAYED" | "INVALID_ANSWER" | "INVALID_RATING" | "TOO_EARLY" | "TOO_LATE"
   | "NOT_ENOUGH_PLAYERS" | "NOT_ENOUGH_QUESTIONS" | "ALREADY_JOINED" | "ROOM_FULL"
-  | "NOT_ANSWERED_YET" | "INVALID_NAME" | "NAME_TAKEN";
+  | "NOT_ANSWERED_YET" | "INVALID_NAME" | "NAME_TAKEN" | "INVALID_RULES";
 
 export type ReduceResult =
   | { ok: true; state: GameState }
@@ -158,6 +180,7 @@ export interface PublicState {
   reveal: PublicReveal | null;
   /** On the podium: who asked for another round. */
   encore: PlayerId[];
+  rules: Rules;
 }
 
 export interface Ranking {

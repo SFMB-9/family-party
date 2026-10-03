@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_COLUMNS, MAX_NAME_LENGTH, MAX_PLAYERS, initialState, reduce } from "./reducer";
+import { DEFAULT_RULES } from "./rules";
+import type { Rules } from "./types";
 import type { Category, GameState, Player, Question, ReduceResult } from "./types";
 
 // ---- helpers ----
@@ -592,5 +594,141 @@ describe("after the game", () => {
     const closed = ok(reduce(lobbyWith("ana"), { type: "CLOSE" }));
     expect(reduce(closed, { type: "CLOSE" })).toEqual({ ok: false, error: "WRONG_PHASE" });
     expect(reduce(closed, { type: "JOIN", player: player("late") })).toEqual({ ok: false, error: "WRONG_PHASE" });
+  });
+});
+
+// ---- house rules ----
+describe("rules", () => {
+  const timed = bank.map((x) => ({ ...x, timeLimitMs: 20_000 }));
+  /** Lobby with these rules, then START. */
+  function withRules(rules: Partial<Rules>, ids = ["ana", "beto", "caro"], questions = timed, seed = 1): GameState {
+    const lobby = ok(reduce(lobbyWith(...ids), { type: "SET_RULES", rules }));
+    return ok(reduce(lobby, { type: "START", questions, seed }));
+  }
+  const openFirst = (s: GameState, at = 1_000) => {
+    const id = s.board[0]!.id;
+    return { s: ok(pick(s, s.players[s.turnOwner]!.id, id, at)), id };
+  };
+
+  describe("SET_RULES", () => {
+    it("merges a partial change into the defaults", () => {
+      const s = ok(reduce(lobbyWith("ana"), { type: "SET_RULES", rules: { steals: "full", columns: 3 } }));
+      expect(s.rules).toEqual({ ...DEFAULT_RULES, steals: "full", columns: 3 });
+    });
+
+    it.each([
+      { columns: 6 }, { columns: 2.5 }, { rows: 0 }, { rows: 9 }, { timer: 17 }, { wrongAnswer: "maybe" },
+      { mixed: "yes" }, { unknownOption: true }, { steals: "half", columns: 99 },   // all or nothing
+    ])("rejects %j", (rules) => {
+      expect(reduce(lobbyWith("ana"), { type: "SET_RULES", rules })).toEqual({ ok: false, error: "INVALID_RULES" });
+    });
+
+    it("only in the lobby", () => {
+      expect(reduce(game(["ana"]), { type: "SET_RULES", rules: { columns: 3 } })).toEqual({ ok: false, error: "WRONG_PHASE" });
+    });
+
+    it("survive a rematch", () => {
+      let s = withRules({ steals: "off" }, ["ana"]);
+      s = ok(reduce(s, { type: "END" }));
+      s = ok(reduce(s, { type: "REMATCH", keep: ["ana"] }));
+      expect(s.rules.steals).toBe("off");
+    });
+  });
+
+  describe("board", () => {
+    it("uses the chosen number of columns and a fixed number of rows", () => {
+      const s = withRules({ columns: 3, rows: 2 });
+      expect(new Set(s.board.map((c) => c.category)).size).toBe(3);
+      expect(s.board).toHaveLength(6);
+      expect(s.board.map((c) => c.column)).toEqual([0, 0, 1, 1, 2, 2]);
+    });
+
+    it("rows: 'players' deals one card per player per column", () => {
+      expect(withRules({ columns: 4 }, ["ana", "beto"]).board).toHaveLength(8);
+    });
+
+    it("mixed: a columns × rows grid of any categories", () => {
+      const s = withRules({ mixed: true, columns: 4, rows: 3 });
+      expect(s.board).toHaveLength(12);
+      expect(new Set(s.board.map((c) => c.questionId)).size).toBe(12);
+      expect(s.board.filter((c) => c.column === 0)).toHaveLength(3);
+      expect(new Set(s.board.map((c) => c.category)).size).toBeGreaterThan(1);
+    });
+
+    it("mixed works with a pack that has a single category", () => {
+      const one = Array.from({ length: 10 }, () => ({ ...q("solo"), timeLimitMs: 20_000 }));
+      expect(withRules({ mixed: true, columns: 3, rows: 3 }, ["ana"], one).board).toHaveLength(9);
+    });
+  });
+
+  describe("wrong answers", () => {
+    const missOnce = (rules: Partial<Rules>) => {
+      const { s, id } = openFirst(withRules(rules));
+      return ok(answer(s, "ana", wrong(s, id), 2_000));
+    };
+
+    it("lose (default): the stake comes off, even below zero", () => {
+      expect(missOnce({}).scores.ana).toBe(-100);
+    });
+
+    it("keep: no penalty", () => {
+      expect(missOnce({ wrongAnswer: "keep" }).scores.ana).toBe(0);
+    });
+
+    it("floor: never below $0", () => {
+      expect(missOnce({ wrongAnswer: "floor" }).scores.ana).toBe(0);
+      const s = missOnce({ wrongAnswer: "floor" });
+      expect(s.phase.kind === "answering" && s.phase.results[0]!.delta).toBe(0);
+    });
+  });
+
+  describe("steals", () => {
+    it("off: a miss closes the card", () => {
+      const { s, id } = openFirst(withRules({ steals: "off" }));
+      expect(ok(answer(s, "ana", wrong(s, id), 2_000)).phase.kind).toBe("picking");
+    });
+
+    it("full: the stealer plays for the whole value", () => {
+      const { s, id } = openFirst(withRules({ steals: "full" }));
+      expect(ok(answer(s, "ana", wrong(s, id), 2_000)).phase).toMatchObject({ answerer: "beto", stake: 100 });
+    });
+
+    it("half (default) halves each time", () => {
+      const { s, id } = openFirst(withRules({}));
+      expect(ok(answer(s, "ana", wrong(s, id), 2_000)).phase).toMatchObject({ stake: 50 });
+    });
+  });
+
+  describe("timer", () => {
+    it("a fixed timer overrides each question's own", () => {
+      const { s } = openFirst(withRules({ timer: 15 }));
+      expect(s.phase).toMatchObject({ deadline: 16_000 });
+    });
+
+    it("off: no deadline, so no timeouts", () => {
+      const { s } = openFirst(withRules({ timer: "off" }));
+      expect(s.phase).toMatchObject({ deadline: null });
+      expect(reduce(s, { type: "TIMEOUT", at: 999_999 })).toEqual({ ok: false, error: "WRONG_PHASE" });
+    });
+
+    it("stealTime fresh (default): a full new timer", () => {
+      const { s, id } = openFirst(withRules({}));
+      expect(ok(answer(s, "ana", wrong(s, id), 6_000)).phase).toMatchObject({ deadline: 26_000 });
+    });
+
+    it("stealTime remaining: inherits what was left", () => {
+      const { s, id } = openFirst(withRules({ stealTime: "remaining" }));     // deadline 21_000
+      expect(ok(answer(s, "ana", wrong(s, id), 6_000)).phase).toMatchObject({ deadline: 21_000 });
+    });
+
+    it("stealTime remaining after a timeout still gives the floor (5 s)", () => {
+      const { s } = openFirst(withRules({ stealTime: "remaining" }));
+      expect(ok(reduce(s, { type: "TIMEOUT", at: 21_000 })).phase).toMatchObject({ deadline: 26_000 });
+    });
+
+    it("stealTime half: half a timer", () => {
+      const { s, id } = openFirst(withRules({ stealTime: "half" }));
+      expect(ok(answer(s, "ana", wrong(s, id), 6_000)).phase).toMatchObject({ deadline: 16_000 });
+    });
   });
 });

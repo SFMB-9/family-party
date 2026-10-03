@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { describeError as describeErrorText } from "./lib/errors";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { rankings, type Card, type Phase, type PlayerId, type PublicState } from "@family-party/game-core";
+import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- helpers
 
@@ -119,27 +120,28 @@ export function Scoreboard({ view, connected, me }: { view: PublicState; connect
 // ---------------------------------------------------------------- board
 
 /** Cards grouped into category columns, in the order they were dealt. */
-function columns(board: Card[]): [string, Card[]][] {
-  const map = new Map<string, Card[]>();
-  for (const card of board) map.set(card.category, [...(map.get(card.category) ?? []), card]);
-  return [...map];
+/** Cards grouped by board column, in deal order. Header = the column's category, or none on a mixed board. */
+function columns(board: Card[], mixed: boolean): [number, string | null, Card[]][] {
+  const map = new Map<number, Card[]>();
+  for (const card of board) map.set(card.column, [...(map.get(card.column) ?? []), card]);
+  return [...map].sort(([a], [b]) => a - b).map(([column, cards]) => [column, mixed ? null : cards[0]!.category, cards]);
 }
 
 export function Board({ view, onPick }: { view: PublicState; onPick?: (cardId: string) => void }) {
   const openCard = view.phase.kind === "answering" ? view.phase.cardId : null;
-  const cols = columns(view.board);
+  const cols = columns(view.board, view.rules.mixed);
   return (
-    <div className="board" style={{ ["--cols" as string]: cols.length }}>
-      {cols.map(([category, cards]) => (
-        <div key={category} className="column">
-          <div className="category">{category}</div>
+    <div className={`board ${view.rules.mixed ? "mixed" : ""}`} style={{ ["--cols" as string]: cols.length }}>
+      {cols.map(([column, category, cards]) => (
+        <div key={column} className="column">
+          {category !== null && <div className="category">{category}</div>}
           {cards.map((card) => (
             <button
               key={card.id}
               className={`card ${card.played ? "played" : ""} ${card.id === openCard ? "open" : ""}`}
               disabled={!onPick || card.played || openCard !== null}
               onClick={() => onPick?.(card.id)}
-              aria-label={card.played ? `${category}: jugada` : `${category}: ${money(card.value)}`}
+              aria-label={`${category ?? "Carta"}: ${card.played ? "jugada" : money(card.value)}`}
             >
               {card.played ? "" : money(card.value)}
             </button>
@@ -394,5 +396,300 @@ export function RoomClosed({ onLeave }: { onLeave: () => void }) {
       <p className="pixel-title">Sala cerrada</p>
       <p className="hint">Gracias por jugar. Volviendo al inicio…</p>
     </section>
+  );
+}
+
+// ---------------------------------------------------------------- house rules
+
+type Option<T> = { value: T; label: string };
+
+const RULE_OPTIONS = {
+  wrongAnswer: [
+    { value: "lose", label: "Resta" },
+    { value: "floor", label: "Resta, sin bajar de $0" },
+    { value: "keep", label: "Sin castigo" },
+  ],
+  timer: [
+    { value: "question", label: "Por pregunta" },
+    { value: 15, label: "15 s" },
+    { value: 20, label: "20 s" },
+    { value: 30, label: "30 s" },
+    { value: "off", label: "Sin límite" },
+  ],
+  steals: [
+    { value: "half", label: "A mitad" },
+    { value: "full", label: "Completos" },
+    { value: "off", label: "No" },
+  ],
+  stealTime: [
+    { value: "fresh", label: "Tiempo nuevo" },
+    { value: "remaining", label: "Lo que quedaba" },
+    { value: "half", label: "Mitad" },
+  ],
+  mixed: [
+    { value: false, label: "Por categorías" },
+    { value: true, label: "Mezclado" },
+  ],
+  columns: [3, 4, 5].map((n) => ({ value: n, label: String(n) })),
+  rows: [
+    { value: "players", label: "1 por jugador" },
+    ...[2, 3, 4, 5, 6].map((n) => ({ value: n, label: String(n) })),
+  ],
+} satisfies { [K in keyof Rules]: Option<Rules[K]>[] };
+
+const labelOf = <K extends keyof Rules>(key: K, value: Rules[K]) =>
+  (RULE_OPTIONS[key] as Option<Rules[K]>[]).find((o) => o.value === value)?.label ?? String(value);
+
+const RULE_KEYS = Object.keys(DEFAULT_RULES) as (keyof Rules)[];
+const sameRules = (a: Rules, b: Rules) => RULE_KEYS.every((k) => a[k] === b[k]);
+
+/** 12×12 pixel booklet, drawn on a grid like the fonts: crisp at 2× (24px) and 3×. */
+function BookletIcon() {
+  // "#" = ink, "-" = page, "." = empty
+  const art = [
+    "............",
+    ".####.####..",
+    "#----#----#.",
+    "#-##-#-##-#.",
+    "#----#----#.",
+    "#-##-#-##-#.",
+    "#----#----#.",
+    "#-##-#-##-#.",
+    "#----#----#.",
+    ".####.####..",
+    "......#.....",
+    "............",
+  ];
+  const cells = art.flatMap((row, y) => [...row].map((c, x) => ({ c, x, y }))).filter((p) => p.c !== ".");
+  return (
+    <svg className="booklet" viewBox="0 0 12 12" width="24" height="24" shapeRendering="crispEdges" aria-hidden>
+      {cells.map(({ c, x, y }) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={c === "#" ? "currentColor" : "var(--page, #f2f2f2)"} />
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * "Reglas de esta partida" as a booklet: closed by default so the lobby stays simple,
+ * but it says when the host changed something, and changed rules are gold inside.
+ */
+export function RulesSummary({ rules }: { rules: Rules }) {
+  const [open, setOpen] = useState(false);
+  const changed = RULE_KEYS.filter((k) => rules[k] !== DEFAULT_RULES[k]);
+  const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
+
+  const rows: [string, string, boolean][] = [
+    ["Respuesta incorrecta", labelOf("wrongAnswer", rules.wrongAnswer), isChanged("wrongAnswer")],
+    ["Tiempo", labelOf("timer", rules.timer), isChanged("timer")],
+    [
+      "Robos",
+      rules.steals === "off"
+        ? "No"
+        : `${labelOf("steals", rules.steals)}${rules.timer === "off" ? "" : ` · ${labelOf("stealTime", rules.stealTime).toLowerCase()}`}`,
+      isChanged("steals", "stealTime"),
+    ],
+    [
+      "Tablero",
+      `${rules.mixed ? "Mezclado" : "Por categorías"}, ${rules.columns} × ${rules.rows === "players" ? "1 por jugador" : rules.rows}`,
+      isChanged("mixed", "columns", "rows"),
+    ],
+  ];
+
+  return (
+    <aside className="rules-corner">
+      {open && (
+        <dl className="rules-popover" id="rules-popover">
+          {rows.map(([term, value, differs]) => (
+            <div key={term} className={differs ? "changed" : ""}>
+              <dt>{term}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      <button className="booklet-toggle" aria-expanded={open} aria-controls="rules-popover" onClick={() => setOpen((o) => !o)}>
+        <BookletIcon />
+        <span className="label">{changed.length === 0 ? "Reglas clásicas" : "Reglas de la casa"}</span>
+        {changed.length > 0 && <span className="changes">{changed.length}</span>}
+      </button>
+    </aside>
+  );
+}
+
+/** Segmented choice: the selected option is the light button, the rest stay quiet. */
+function Choice<K extends keyof Rules>({ label, field, rules, onChange }: {
+  label: string; field: K; rules: Rules; onChange: (patch: Partial<Rules>) => void;
+}) {
+  return (
+    <div className="choice" role="group" aria-label={label}>
+      <span className="choice-label">{label}</span>
+      <div className="choice-options">
+        {(RULE_OPTIONS[field] as Option<Rules[K]>[]).map((o) => (
+          <button
+            key={String(o.value)}
+            className={`btn small ${o.value === rules[field] ? "" : "quiet"}`}
+            aria-pressed={o.value === rules[field]}
+            onClick={() => onChange({ [field]: o.value } as Partial<Rules>)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Host lobby: house rules as a draft. Nothing reaches the server (or the phones)
+ * until Guardar; the panel closes only once the saved rules come back in a snapshot,
+ * so a rejected save never looks like it worked.
+ */
+export function RulesPanel({ rules, players, error, onSave, onClose }: {
+  rules: Rules;
+  players: number;
+  error: string | null;
+  onSave: (rules: Rules) => boolean;
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useState(rules);
+  const [saving, setSaving] = useState<"idle" | "waiting" | "failed">("idle");
+  const edit = (patch: Partial<Rules>) => {
+    setSaving("idle");
+    setDraft((d) => ({ ...d, ...patch }));
+  };
+  const dirty = !sameRules(draft, rules);
+
+  // Saved: the server's rules now match the draft.
+  useEffect(() => {
+    if (saving === "waiting" && sameRules(rules, draft)) onClose();
+  }, [saving, rules, draft, onClose]);
+  // Rejected, or no answer at all.
+  useEffect(() => {
+    if (saving !== "waiting") return;
+    if (error) return setSaving("failed");
+    const t = setTimeout(() => setSaving("failed"), 5_000);
+    return () => clearTimeout(t);
+  }, [saving, error]);
+
+  const save = () => setSaving(onSave(draft) ? "waiting" : "failed");
+  const rows = rowsFor(draft, players);
+  const cards = draft.columns * rows;
+  const uneven = players > 1 && cards % players !== 0;
+  return (
+    <div className="rules-panel">
+      <Choice label="Respuesta incorrecta" field="wrongAnswer" rules={draft} onChange={edit} />
+      <Choice label="Tiempo" field="timer" rules={draft} onChange={edit} />
+      <Choice label="Robos" field="steals" rules={draft} onChange={edit} />
+      {draft.steals !== "off" && draft.timer !== "off" && (
+        <Choice label="Tiempo para robar" field="stealTime" rules={draft} onChange={edit} />
+      )}
+      <Choice label="Tablero" field="mixed" rules={draft} onChange={edit} />
+      <Choice label={draft.mixed ? "Columnas" : "Categorías"} field="columns" rules={draft} onChange={edit} />
+      <Choice label={draft.mixed ? "Cartas por columna" : "Cartas por categoría"} field="rows" rules={draft} onChange={edit} />
+      <p className={`hint ${uneven ? "warn" : ""}`}>
+        {players === 0
+          ? `${draft.columns} columnas × ${draft.rows === "players" ? "1 carta por jugador" : `${draft.rows} cartas`}`
+          : uneven
+            ? `${cards} cartas para ${players} jugadores: no todos tendrán los mismos turnos.`
+            : `${cards} cartas: ${cards / Math.max(players, 1)} turno${cards / Math.max(players, 1) === 1 ? "" : "s"} por jugador.`}
+      </p>
+      {saving === "failed" && (
+        <p className="hint warn" role="alert">No se guardó: {describeErrorText(error) ?? "el servidor no respondió"}. Intenta de nuevo.</p>
+      )}
+      <div className="panel-footer">
+        <button
+          className="link-btn"
+          disabled={sameRules(draft, DEFAULT_RULES)}
+          onClick={() => edit(DEFAULT_RULES)}
+        >
+          Restablecer
+        </button>
+        <div className="panel-footer-actions">
+          {dirty ? (
+            <>
+              <button className="btn small quiet" onClick={() => { setSaving("idle"); setDraft(rules); }}>Cancelar</button>
+              <button className="btn small" disabled={saving === "waiting"} onClick={save}>
+                {saving === "waiting" ? "Guardando…" : "Guardar"}
+              </button>
+            </>
+          ) : (
+            <button className="btn small" onClick={onClose}>Volver</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- copy to clipboard
+
+/** Clipboard API needs a secure context (https or localhost); a LAN/Tailscale IP over http doesn't have one. */
+async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* fall through to the old way */
+  }
+  try {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Text that copies itself when clicked (the room code, the join link), with a short
+ * "¡Copiado!" so the tap visibly did something. Looks exactly like the text it replaces.
+ * With `share`, phones that support it open their share menu (WhatsApp, Messages…) instead.
+ */
+export function CopyText({ text, copy = text, className = "", label, share }: {
+  text: string; copy?: string; className?: string; label: string;
+  share?: { title: string; text: string; url: string };
+}) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
+  const isLink = /^https?:\/\//.test(copy);
+  const onClick = async () => {
+    if (share && typeof navigator.share === "function" && matchMedia("(pointer: coarse)").matches) {
+      try {
+        await navigator.share(share);
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return; // they closed the menu
+        // anything else: fall back to copying
+      }
+    }
+    setState((await copyText(copy)) ? "copied" : "failed");
+  };
+  useEffect(() => {
+    if (state === "idle") return;
+    const t = setTimeout(() => setState("idle"), 1_500);
+    return () => clearTimeout(t);
+  }, [state]);
+  return (
+    <button
+      type="button"
+      className={`copy-text ${className}`}
+      title={`Copiar ${label}`}
+      aria-label={`${text}. Copiar ${label}`}
+      onClick={onClick}
+    >
+      {text}
+      {state !== "idle" && (
+        <span className="copied" role="status">{state === "failed" ? "No se pudo copiar" : isLink ? "¡Enlace copiado!" : "¡Copiado!"}</span>
+      )}
+    </button>
   );
 }

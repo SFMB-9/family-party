@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
-  Announcement, Avatar, Board, ConfirmButton, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Scoreboard,
-  stageOf, useServerNow,
+  Announcement, Avatar, Board, ConfirmButton, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesPanel,
+  RulesSummary, Scoreboard, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -15,6 +15,8 @@ import { useRoom } from "../../lib/useRoom";
 export default function HostPage() {
   const code = String(useParams<{ code: string }>().code).toUpperCase();
   const { status, state, error, send, clockOffset, missingConfig } = useRoom(code, "host");
+  const [editingRules, setEditingRules] = useState(false);
+  const closeRules = useCallback(() => setEditingRules(false), []);
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
@@ -29,13 +31,14 @@ export default function HostPage() {
   const isHost = you.role === "host";
   const playing = view.phase.kind === "picking" || view.phase.kind === "answering";
   const joinUrl = typeof window !== "undefined" ? `${window.location.host}/play/${code}` : "";
+  const joinLink = typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : "";
 
   return (
     <div className="stage host-screen" data-stage={stageOf(view.phase)}>
       <main className="shell host">
         <header className="top">
           <h1 className="logo">Family Party</h1>
-          <div className="room-code" title="Código de la sala">{code}</div>
+          <CopyText className="room-code" text={code} label="el código de la sala" />
           <div className="top-right">
             {isHost && playing && <ConfirmButton label="Terminar" question="¿Terminar ya?" onConfirm={() => send({ t: "end" })} />}
             <span className={`status status-${status}`}>{status === "open" ? "En línea" : "Reconectando…"}</span>
@@ -49,28 +52,49 @@ export default function HostPage() {
           <section className="lobby">
             <div className="lobby-join">
               <p className="pixel-title">Únete desde tu celular</p>
-              <p className="join-url">{joinUrl}</p>
+              <CopyText className="join-url" text={joinUrl} copy={joinLink} label="el enlace para unirse" />
               <p className="hint">o abre la página principal y escribe el código</p>
-              <p className="room-code huge">{code}</p>
+              <CopyText className="room-code huge" text={code} label="el código de la sala" />
             </div>
             <div className="lobby-roster">
-              <p className="pixel-title small">Jugadores ({view.players.length}/10)</p>
-              <ul className="roster">
-                {Array.from({ length: 10 }, (_, i) => view.players[i]).map((p, i) =>
-                  p ? (
-                    <li key={p.id} className={connected.includes(p.id) ? "" : "away"} title={p.name}>
-                      <Avatar id={p.id} name={p.name} size={72} />
-                      <span>{p.name}</span>
-                    </li>
-                  ) : (
-                    <li key={`empty-${i}`} className="empty-slot" aria-hidden />
-                  ),
-                )}
-              </ul>
-              {isHost && (
-                <button className="btn big" disabled={view.players.length === 0} onClick={() => send({ t: "start" })}>
-                  Jugar
-                </button>
+              {editingRules && isHost ? (
+                <>
+                  <p className="pixel-title small">Opciones</p>
+                  <RulesPanel
+                    rules={view.rules}
+                    players={view.players.length}
+                    error={error}
+                    onSave={(rules) => send({ t: "rules", rules })}
+                    onClose={closeRules}
+                  />
+                </>
+              ) : (
+                <>
+                  <p className="pixel-title small">Jugadores ({view.players.length}/10)</p>
+                  <ul className="roster">
+                    {Array.from({ length: 10 }, (_, i) => view.players[i]).map((p, i) =>
+                      p ? (
+                        <li key={p.id} className={connected.includes(p.id) ? "" : "away"} title={p.name}>
+                          <Avatar id={p.id} name={p.name} size={72} />
+                          <span>{p.name}</span>
+                        </li>
+                      ) : (
+                        <li key={`empty-${i}`} className="empty-slot" aria-hidden />
+                      ),
+                    )}
+                  </ul>
+                  {isHost && (
+                    <div className="after-actions">
+                      {view.players.length > 0 ? (
+                        <button className="btn big" onClick={() => send({ t: "start" })}>Jugar</button>
+                      ) : (
+                        <p className="waiting-players">Esperando jugadores…</p>
+                      )}
+                      <button className="btn small" onClick={() => setEditingRules(true)}>Opciones</button>
+                    </div>
+                  )}
+                  <RulesSummary rules={view.rules} />
+                </>
               )}
             </div>
           </section>

@@ -5,7 +5,7 @@
  * Rule: the client never says WHO it is or WHEN something happened.
  * Identity comes from the connection (bound via a secret token), time from the server clock.
  */
-import type { CardId, Difficulty, GameError, PlayerId, PublicState, QuestionId } from "@family-party/game-core";
+import type { CardId, Difficulty, GameError, PlayerId, PublicState, QuestionId, Rules } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- client → server
 
@@ -28,6 +28,8 @@ export type ClientMessage =
   | { t: "close" }
   /** Player, from the podium: "I'd play another one." */
   | { t: "encore" }
+  /** Host only, in the lobby: change some house rules (game-core validates the values). */
+  | { t: "rules"; rules: Partial<Record<keyof Rules, unknown>> }
   | { t: "pick"; cardId: CardId }
   | { t: "answer"; choice: number }
   /** "My countdown hit zero." The server checks against its own clock. */
@@ -75,6 +77,11 @@ const MAX_ID_LENGTH = 100;
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null && !Array.isArray(x);
 const isShortString = (x: unknown, max = MAX_ID_LENGTH): x is string => typeof x === "string" && x.length > 0 && x.length <= max;
+/** Flat object of a few primitive values: the shape of a rules change. Values are checked by game-core. */
+const isRulesPatch = (x: unknown): x is Record<string, string | number | boolean> =>
+  isObject(x) &&
+  Object.keys(x).length <= 10 &&
+  Object.entries(x).every(([k, v]) => isShortString(k, 20) && ["string", "number", "boolean"].includes(typeof v));
 const isStringList = (x: unknown): x is string[] =>
   Array.isArray(x) && x.length <= 50 && x.every((s) => isShortString(s));
 
@@ -112,6 +119,8 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
       if (data.categories) msg.categories = data.categories;
       return msg;
     }
+    case "rules":
+      return isRulesPatch(data.rules) ? { t: "rules", rules: data.rules } : null;
     case "join":
       // Length and spacing are game rules (normalizeName in game-core); here we only check it's text.
       return typeof data.name === "string" && data.name.length <= 200 ? { t: "join", name: data.name } : null;

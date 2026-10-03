@@ -240,6 +240,21 @@ describe("bad input", () => {
   });
 });
 
+describe("house rules", () => {
+  it("only the host changes them, in the lobby; everyone sees them", async () => {
+    const { code } = await createRoom();
+    await joinAs("ana", code, "Ana");
+    await send("ana", { t: "rules", rules: { steals: "off" } });
+    expect(errorOf("ana")).toBe("NOT_HOST");
+
+    await send("host", { t: "rules", rules: { steals: "off", columns: 3 } });
+    expect(stateOf("ana").view.rules).toMatchObject({ steals: "off", columns: 3 });
+
+    await send("host", { t: "rules", rules: { columns: 42 } });
+    expect(errorOf("host")).toBe("INVALID_RULES");
+  });
+});
+
 describe("after the game", () => {
   async function onPodium() {
     const { code } = await createRoom();
