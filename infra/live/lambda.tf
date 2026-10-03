@@ -79,6 +79,7 @@ resource "aws_lambda_function" "game_session" {
     variables = {
       CONNECTIONS_TABLE = aws_dynamodb_table.connections.name
       NODE_OPTIONS      = "--enable-source-maps" # readable stack traces from the sourcemap
+      ROOMS_TABLE       = aws_dynamodb_table.rooms.name
     }
   }
 

@@ -24,6 +24,11 @@ resource "aws_dynamodb_table" "connections" {
     type = "S"
   }
 
+  attribute {
+    name = "roomCode"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "byRoom"
     hash_key        = "roomCode"
