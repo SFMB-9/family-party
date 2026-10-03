@@ -152,6 +152,17 @@ img { image-rendering: pixelated; }
 .status-open { color: var(--ok); }
 .status-connecting, .status-reconnecting { color: var(--gold); }
 
+/* Connection: pulsing pixel dot. Green steady breath, yellow faster, red blinking. */
+.connection { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--panel); font-size: var(--t1); }
+.connection .dot { width: 12px; height: 12px; flex: none; animation: pulse 2.4s steps(2) infinite; }
+.connection.good { color: var(--ok); }
+.connection.slow { color: var(--gold); }
+.connection.slow .dot { animation-duration: 1.2s; }
+.connection.bad { color: #e05a5a; }
+.connection.bad .dot { animation-duration: 0.6s; }
+.phone .connection { padding: 6px 8px; background: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
 .empty { color: var(--muted); text-align: center; margin: auto; }
 .hint { color: var(--muted); margin: 0; }
 .notice { margin: 0; padding: 10px 14px; background: var(--panel); color: var(--muted); }

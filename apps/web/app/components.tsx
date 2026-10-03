@@ -721,3 +721,24 @@ export function CopyText({ text, copy = text, className = "", label, share, icon
     </button>
   );
 }
+
+// ---------------------------------------------------------------- connection
+
+/** 6×6 pixel dot, pulsing: green good, yellow slow, red bad/reconnecting. */
+export function ConnectionDot({ quality, status, latencyMs, label = true }: {
+  quality: "good" | "slow" | "bad"; status: string; latencyMs: number | null; label?: boolean;
+}) {
+  const level = status !== "open" ? "bad" : quality;
+  const text = level === "good" ? "En línea" : level === "slow" ? "Conexión lenta" : "Reconectando…";
+  const art = ["..##..", ".####.", "######", "######", ".####.", "..##.."];
+  return (
+    <span className={`connection ${level}`} title={latencyMs !== null && status === "open" ? `${text} · ${latencyMs} ms` : text} role="status">
+      <svg className="dot" viewBox="0 0 6 6" width="12" height="12" shapeRendering="crispEdges" aria-hidden>
+        {art.flatMap((row, y) =>
+          [...row].map((c, x) => (c === "#" ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill="currentColor" /> : null)),
+        )}
+      </svg>
+      {label ? <span>{text}</span> : <span className="sr-only">{text}</span>}
+    </span>
+  );
+}

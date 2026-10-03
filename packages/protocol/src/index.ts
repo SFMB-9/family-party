@@ -30,6 +30,8 @@ export type ClientMessage =
   | { t: "encore" }
   /** Host only, in the lobby: change some house rules (game-core validates the values). */
   | { t: "rules"; rules: Partial<Record<keyof Rules, unknown>> }
+  /** Heartbeat: measures latency and keeps API Gateway from closing an idle socket (10 min). */
+  | { t: "ping" }
   | { t: "pick"; cardId: CardId }
   | { t: "answer"; choice: number }
   /** "My countdown hit zero." The server checks against its own clock. */
@@ -59,7 +61,9 @@ export type ServerMessage =
   | { t: "catalog"; packs: PackInfo[] }
   | { t: "created"; room: string; hostToken: string }
   | { t: "joined"; playerId: PlayerId; token: string }
-  | { t: "error"; error: GameError | ProtocolError };
+  | { t: "error"; error: GameError | ProtocolError }
+  /** Answer to a ping. serverTime lets clients refine their clock offset between snapshots. */
+  | { t: "pong"; serverTime: number };
 
 export type ProtocolError =
   | "BAD_MESSAGE"       // not valid JSON / unknown type / wrong field types
@@ -104,6 +108,7 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
       if (data.token !== undefined && !isShortString(data.token, 200)) return null;
       return data.token === undefined ? { t: "hello" } : { t: "hello", token: data.token };
     case "catalog":
+    case "ping":
     case "start":
     case "end":
     case "rematch":
