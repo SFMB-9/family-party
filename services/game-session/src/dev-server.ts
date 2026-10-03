@@ -4,6 +4,7 @@
  *
  *   pnpm --filter @family-party/game-session dev
  *   then in apps/web/.env.local:  NEXT_PUBLIC_WS_URL=ws://localhost:8787
+ *   (TIME_LIMIT_SEC=6 pnpm … dev  to make every timer short)
  *
  * Restarting it wipes all rooms. Never deployed: not imported by handler.ts.
  */
@@ -14,6 +15,8 @@ import { createApp } from "./app";
 import { MemoryConnections, MemoryRooms } from "./memory";
 
 const PORT = Number(process.env.PORT ?? 8787);
+/** Optional: TIME_LIMIT_SEC=6 shortens every timed question, handy for testing timeouts and steals. */
+const TIME_LIMIT_MS = process.env.TIME_LIMIT_SEC ? Number(process.env.TIME_LIMIT_SEC) * 1000 : null;
 const sockets = new Map<string, WebSocket>();
 
 const app = createApp({
@@ -31,7 +34,8 @@ const app = createApp({
   randomInt: (max) => randomInt(max),
   randomToken: () => randomBytes(24).toString("base64url"),
   hash: (token) => createHash("sha256").update(token).digest("hex"),
-  questions: (selection) => selectQuestions(selection),
+  questions: (selection) =>
+    selectQuestions(selection).map((q) => (TIME_LIMIT_MS && q.timeLimitMs ? { ...q, timeLimitMs: TIME_LIMIT_MS } : q)),
   catalog: () => catalog(),
 });
 

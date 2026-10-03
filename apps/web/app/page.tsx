@@ -61,13 +61,15 @@ export default function Home() {
   const categories = packs?.flatMap((p) => p.categories.map((c) => ({ ...c, pack: p.name }))) ?? [];
 
   return (
+    <div className="stage" data-stage="board">
     <main className="shell home">
-      <header className="top">
-        <h1>Family Party</h1>
+      <header className="hero">
+        <h1 className="logo big">Family Party</h1>
+        <p className="tagline">Trivia en familia, desde el celular</p>
       </header>
 
       <section className="panel">
-        <h2>Unirse a una sala</h2>
+        <h2 className="pixel-title small">Unirse a una sala</h2>
         <form className="join-code" onSubmit={join}>
           <input
             value={code}
@@ -77,12 +79,12 @@ export default function Home() {
             autoCapitalize="characters"
             aria-label="Código de sala"
           />
-          <button className="primary" type="submit" disabled={!isRoomCode(code)}>Entrar</button>
+          <button className="btn" type="submit" disabled={!isRoomCode(code)}>Entrar</button>
         </form>
       </section>
 
       <section className="panel">
-        <h2>Crear una sala</h2>
+        <h2 className="pixel-title small">Crear una sala</h2>
         <p className="hint">Abre esto en la pantalla que todos verán (la tele, o la que compartas en Discord).</p>
         {!packs && <p className="hint">Cargando categorías…</p>}
         <div className="chips">
@@ -93,10 +95,11 @@ export default function Home() {
           ))}
         </div>
         {error && <p className="notice error">{describeError(error)}</p>}
-        <button className="primary big" disabled={!packs || chosen.size === 0 || creating} onClick={create}>
+        <button className="btn big" disabled={!packs || chosen.size === 0 || creating} onClick={create}>
           {creating ? "Creando…" : "Crear sala"}
         </button>
       </section>
     </main>
+    </div>
   );
 }

@@ -218,6 +218,10 @@ export function createApp(deps: Deps) {
         change = (room) =>
           applyAction(room, { type: "START", questions: deps.questions(room.selection), seed: deps.randomInt(2 ** 31) });
         break;
+      case "end":
+        if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+        change = (room) => applyAction(room, { type: "END" });
+        break;
       case "timeout":
         // Anyone in the room may poke; game-core rejects it unless the deadline really passed.
         change = (room) => applyAction(room, { type: "TIMEOUT", at });

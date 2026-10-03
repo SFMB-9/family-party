@@ -1,7 +1,7 @@
 import { createRng, shuffle } from "./random";
 import { choiceHandler } from "./handlers/choice";
 import type {
-  Action, Card, Category, Difficulty, GameError, GameState, Phase, PlayerId, Question, ReduceResult,
+  Action, AnswerResult, Card, Category, Difficulty, GameError, GameState, Phase, PlayerId, Question, ReduceResult,
 } from "./types";
 
 export const MAX_PLAYERS = 10;    // same as Unity
@@ -11,7 +11,7 @@ export const MAX_NAME_LENGTH = 20;
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, seed: 0,
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0,
   };
 }
 
@@ -33,6 +33,7 @@ export function reduce(state: GameState, action: Action): ReduceResult {
     case "ANSWER":    return answer(state, action);
     case "TIMEOUT":   return timeout(state, action);
     case "RATE":      return rate(state, action);
+    case "END":       return end(state);
     default:          return assertNever(action);
   }
 }
@@ -125,7 +126,7 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
     const picked = shuffle(byCategory.get(category)!, rng).slice(0, rows);
     picked.forEach((q, row) => {
       questions[q.id] = { ...q, response: choiceHandler.prepare(q.response, rng) };
-      board.push({ id: `${category}-${row}`, category, questionId: q.id, played: false });
+      board.push({ id: `${category}-${row}`, category, questionId: q.id, value: stakeOf(q), played: false });
     });
   }
 
@@ -156,6 +157,7 @@ function pickCard(state: GameState, action: ActionOf<"PICK_CARD">): ReduceResult
       stake: stakeOf(question),
       deadline: deadlineFrom(action.at, question),
       tried: [],
+      results: [],
     },
   });
 }
@@ -171,6 +173,7 @@ function answer(state: GameState, action: ActionOf<"ANSWER">): ReduceResult {
 
   const correct = choiceHandler.isCorrect(question.response, action.choice);
   const delta = correct ? phase.stake : -phase.stake;
+  const results = [...phase.results, { playerId: action.playerId, choice: action.choice, delta }];
 
   const scored: GameState = {
     ...recordAttempt(state, question.id, action.playerId, correct),
@@ -178,8 +181,8 @@ function answer(state: GameState, action: ActionOf<"ANSWER">): ReduceResult {
   };
 
   return correct
-    ? done(closeCard(scored, phase.cardId))
-    : done(missed(scored, phase, question, action.at));
+    ? done(closeCard(scored, phase.cardId, action.at, results))
+    : done(missed(scored, phase, question, action.at, results));
 }
 
 /**
@@ -193,7 +196,8 @@ function timeout(state: GameState, action: ActionOf<"TIMEOUT">): ReduceResult {
 
   const question = questionFor(state, phase.cardId);
   const recorded = recordAttempt(state, question.id, phase.answerer, false);
-  return done(missed(recorded, phase, question, action.at));
+  const results = [...phase.results, { playerId: phase.answerer, choice: null, delta: 0 }];
+  return done(missed(recorded, phase, question, action.at, results));
 }
 
 /** Players rate a question's difficulty after they've tried it. Never affects this game's scoring. */
@@ -211,11 +215,11 @@ function rate(state: GameState, action: ActionOf<"RATE">): ReduceResult {
 // ---------------------------------------------------------------- helpers
 
 /** After a miss or a timeout: hand the question to the next player, or close it. */
-function missed(state: GameState, phase: Answering, question: Question, at: number): GameState {
+function missed(state: GameState, phase: Answering, question: Question, at: number, results: AnswerResult[]): GameState {
   const tried = [...phase.tried, phase.answerer];
   const next = question.stealable ? nextUntried(state.players.map((p) => p.id), phase.answerer, tried) : null;
 
-  if (next === null) return closeCard(state, phase.cardId);
+  if (next === null) return closeCard(state, phase.cardId, at, results);
 
   return {
     ...state,
@@ -225,6 +229,7 @@ function missed(state: GameState, phase: Answering, question: Question, at: numb
       stake: Math.floor(phase.stake / 2),
       deadline: deadlineFrom(at, question),
       tried,
+      results,
     },
   };
 }
@@ -234,13 +239,24 @@ function missed(state: GameState, phase: Answering, question: Question, at: numb
  * The turn always advances from the turn owner, never from whoever stole.
  * That single rule is what fixes the Unity turn-skip bug.
  */
-function closeCard(state: GameState, cardId: string): GameState {
+/**
+ * The host calls it a night. An open card is dropped unscored (nobody gains or loses
+ * for a question they didn't get to finish) and no reveal is shown: the podium is the point.
+ */
+function end(state: GameState): ReduceResult {
+  if (state.phase.kind !== "picking" && state.phase.kind !== "answering") return fail("WRONG_PHASE");
+  return done({ ...state, phase: { kind: "gameOver" }, reveal: null });
+}
+
+function closeCard(state: GameState, cardId: string, at: number, results: AnswerResult[]): GameState {
   const board = state.board.map((c) => (c.id === cardId ? { ...c, played: true } : c));
   const allPlayed = board.every((c) => c.played);
+  const questionId = state.board.find((c) => c.id === cardId)!.questionId;
 
   return {
     ...state,
     board,
+    reveal: { cardId, questionId, results, closedAt: at },
     turnOwner: (state.turnOwner + 1) % state.players.length,
     phase: allPlayed ? { kind: "gameOver" } : { kind: "picking" },
   };

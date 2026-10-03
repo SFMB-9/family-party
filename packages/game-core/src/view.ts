@@ -29,6 +29,20 @@ export function publicView(state: GameState): PublicState {
     };
   }
 
+  let reveal: PublicState["reveal"] = null;
+  if (state.reveal) {
+    const q = state.questions[state.reveal.questionId]!;
+    reveal = {
+      cardId: state.reveal.cardId,
+      category: q.category,
+      text: q.prompt.text,
+      options: q.response.options,
+      correct: q.response.correct,     // safe: the card is closed, nobody can answer it anymore
+      results: state.reveal.results,
+      closedAt: state.reveal.closedAt,
+    };
+  }
+
   return {
     players: state.players,
     scores: state.scores,
@@ -36,6 +50,7 @@ export function publicView(state: GameState): PublicState {
     turnOwner: state.turnOwner,
     phase: state.phase,
     current,
+    reveal,
   };
 }
 

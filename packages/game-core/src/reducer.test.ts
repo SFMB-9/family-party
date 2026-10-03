@@ -216,7 +216,7 @@ describe("PICK_CARD", () => {
     const card = g.board[0]!;
     const s = ok(pick(g, "ana", card.id));
     expect(s.phase).toEqual({
-      kind: "answering", cardId: card.id, answerer: "ana", stake: 100, deadline: null, tried: [],
+      kind: "answering", cardId: card.id, answerer: "ana", stake: 100, deadline: null, tried: [], results: [],
     });
   });
 
@@ -442,5 +442,84 @@ describe("RATE", () => {
   it("never changes scores", () => {
     const { s, questionId } = afterOneAnswer();
     expect(ok(rate(s, "ana", questionId, 5)).scores).toEqual(s.scores);
+  });
+});
+
+// ---- REVEAL & CARD VALUES ----
+describe("reveal", () => {
+  const opened = (ids = ["ana", "beto", "caro"], questions = bank) => {
+    const g = game(ids, questions);
+    const id = g.board[0]!.id;
+    return { s: ok(pick(g, "ana", id, 1_000)), id };
+  };
+
+  it("cards carry their value for the board", () => {
+    const g = game(["ana"], bank.map((x) => ({ ...x, difficulty: 3 as const })));
+    expect(g.board.every((c) => c.value === 300)).toBe(true);
+  });
+
+  it("starts empty", () => {
+    expect(game(["ana"]).reveal).toBeNull();
+  });
+
+  it("records a right answer when the card closes", () => {
+    const { s, id } = opened();
+    const next = ok(answer(s, "ana", right(s, id), 2_000));
+    expect(next.reveal).toEqual({
+      cardId: id,
+      questionId: questionOf(s, id).id,
+      results: [{ playerId: "ana", choice: right(s, id), delta: 100 }],
+      closedAt: 2_000,
+    });
+  });
+
+  it("keeps every attempt across steals, including timeouts", () => {
+    const timed = bank.map((x) => ({ ...x, timeLimitMs: 10_000 }));
+    const { s, id } = opened(["ana", "beto", "caro"], timed);
+    const s1 = ok(answer(s, "ana", wrong(s, id), 2_000));              // ana misses: -100
+    const s2 = ok(reduce(s1, { type: "TIMEOUT", at: 12_000 }));        // beto times out: 0
+    expect(s2.phase).toMatchObject({ results: [{ playerId: "ana", delta: -100 }, { playerId: "beto", choice: null, delta: 0 }] });
+    const s3 = ok(answer(s2, "caro", right(s, id), 13_000));            // caro steals at a quarter: +25
+    expect(s3.reveal?.results).toEqual([
+      { playerId: "ana", choice: wrong(s, id), delta: -100 },
+      { playerId: "beto", choice: null, delta: 0 },
+      { playerId: "caro", choice: right(s, id), delta: 25 },
+    ]);
+    expect(s3.reveal?.closedAt).toBe(13_000);
+  });
+
+  it("is replaced by the next card's reveal", () => {
+    let s = game(["ana"]);
+    const [a, b] = s.board;
+    s = ok(answer(ok(pick(s, "ana", a!.id)), "ana", right(s, a!.id), 1));
+    s = ok(answer(ok(pick(s, "ana", b!.id)), "ana", right(s, b!.id), 2));
+    expect(s.reveal?.cardId).toBe(b!.id);
+  });
+});
+
+// ---- END ----
+describe("END", () => {
+  it("goes straight to the podium from the board, keeping scores", () => {
+    const g = game(["ana", "beto"]);
+    const id = g.board[0]!.id;
+    const scored = ok(answer(ok(pick(g, "ana", id, 1_000)), "ana", right(g, id), 2_000));
+    const s = ok(reduce(scored, { type: "END" }));
+    expect(s.phase).toEqual({ kind: "gameOver" });
+    expect(s.scores).toEqual(scored.scores);
+    expect(s.reveal).toBeNull();                       // no reveal hiding the podium
+  });
+
+  it("drops an open card unscored", () => {
+    const g = game(["ana", "beto"]);
+    const id = g.board[0]!.id;
+    const s = ok(reduce(ok(pick(g, "ana", id, 1_000)), { type: "END" }));
+    expect(s.phase).toEqual({ kind: "gameOver" });
+    expect(s.scores).toEqual({ ana: 0, beto: 0 });
+  });
+
+  it("only while playing", () => {
+    expect(reduce(lobbyWith("ana"), { type: "END" })).toEqual({ ok: false, error: "WRONG_PHASE" });
+    const over = ok(reduce(game(["ana"]), { type: "END" }));
+    expect(reduce(over, { type: "END" })).toEqual({ ok: false, error: "WRONG_PHASE" });
   });
 });
