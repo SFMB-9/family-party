@@ -14,6 +14,7 @@ export function upgradeState(saved: Partial<GameState>): GameState {
     rules: { ...DEFAULT_RULES, ...saved.rules },   // added with house rules
     encore: saved.encore ?? [],                      // added with play-again
     played: saved.played ?? [],                      // added with play-again
+    picks: saved.picks ?? [],                        // added with lobby picks (empty = legacy room selection)
   };
   return { ...state, board: withColumns(state.board) };
 }
@@ -28,6 +29,7 @@ export function upgradeView(view: PublicState): PublicState {
     ...partial,
     rules: { ...DEFAULT_RULES, ...partial.rules },
     encore: partial.encore ?? [],
+    picks: partial.picks ?? [],
     board: withColumns(partial.board),
   };
 }

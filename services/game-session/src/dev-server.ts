@@ -10,7 +10,7 @@
  */
 import { createHash, randomBytes, randomInt } from "node:crypto";
 import { WebSocketServer, type WebSocket } from "ws";
-import { catalog, selectQuestions } from "@family-party/question-bank";
+import { catalog, defaultPicks, picksExist, selectQuestions } from "@family-party/question-bank";
 import { createApp } from "./app";
 import { MemoryConnections, MemoryRooms } from "./memory";
 
@@ -37,6 +37,8 @@ const app = createApp({
   questions: (selection) =>
     selectQuestions(selection).map((q) => (TIME_LIMIT_MS && q.timeLimitMs ? { ...q, timeLimitMs: TIME_LIMIT_MS } : q)),
   catalog: () => catalog(),
+  defaultPicks: () => defaultPicks(),
+  picksExist: (picks) => picksExist(picks),
 });
 
 const server = new WebSocketServer({ port: PORT });

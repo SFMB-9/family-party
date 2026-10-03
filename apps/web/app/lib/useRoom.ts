@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { upgradeView } from "@family-party/game-core";
-import type { ClientMessage, ServerMessage } from "@family-party/protocol";
+import type { ClientMessage, PackInfo, ServerMessage } from "@family-party/protocol";
 import { tokenStore } from "./storage";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
@@ -28,6 +28,7 @@ export function useRoom(code: string, kind: Kind) {
   const [clockOffset, setClockOffset] = useState(0); // serverTime - localTime
   const [quality, setQuality] = useState<Quality>("good");
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [catalog, setCatalog] = useState<PackInfo[] | null>(null); // asked for by the host lobby
   const socketRef = useRef<WebSocket | null>(null);
   const closedRef = useRef(false); // room closed: no point keeping the heartbeat
 
@@ -123,6 +124,8 @@ export function useRoom(code: string, kind: Kind) {
           setState({ ...msg, view });
           setClockOffset(msg.serverTime - Date.now());
           setError(null);
+        } else if (msg.t === "catalog") {
+          setCatalog(msg.packs);
         } else if (msg.t === "pong") {
           onPong(msg.serverTime);
         } else if (msg.t === "joined") {
@@ -165,5 +168,5 @@ export function useRoom(code: string, kind: Kind) {
     return true;
   }, []);
 
-  return { status, state, error, send, clockOffset, quality, latencyMs, missingConfig: !WS_URL };
+  return { status, state, error, send, clockOffset, quality, latencyMs, catalog, missingConfig: !WS_URL };
 }

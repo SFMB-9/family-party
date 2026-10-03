@@ -1,9 +1,9 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesPanel,
+  Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
   RulesSummary, Scoreboard, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
@@ -14,7 +14,12 @@ import { useRoom } from "../../lib/useRoom";
 /** The shared screen: TV in the living room, or a Discord screen share. */
 export default function HostPage() {
   const code = String(useParams<{ code: string }>().code).toUpperCase();
-  const { status, state, error, send, clockOffset, quality, latencyMs, missingConfig } = useRoom(code, "host");
+  const { status, state, error, send, clockOffset, quality, latencyMs, catalog, missingConfig } = useRoom(code, "host");
+  const inLobby = state?.view.phase.kind === "lobby";
+  // The category picker needs pack names and sizes: ask once the lobby is open.
+  useEffect(() => {
+    if (status === "open" && inLobby && !catalog) send({ t: "catalog" });
+  }, [status, inLobby, catalog, send]);
   const [editingRules, setEditingRules] = useState(false);
   const closeRules = useCallback(() => setEditingRules(false), []);
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
@@ -59,12 +64,16 @@ export default function HostPage() {
             <div className="lobby-roster">
               {editingRules && isHost ? (
                 <>
-                  <p className="pixel-title small">Opciones</p>
-                  <RulesPanel
+                  <OptionsPanel
                     rules={view.rules}
+                    picks={view.picks}
+                    catalog={catalog}
                     players={view.players.length}
                     error={error}
-                    onSave={(rules) => send({ t: "rules", rules })}
+                    onSave={(next, changed) =>
+                      (!changed.rules || send({ t: "rules", rules: next.rules })) &&
+                      (!changed.picks || send({ t: "picks", picks: next.picks }))
+                    }
                     onClose={closeRules}
                   />
                 </>
@@ -93,7 +102,7 @@ export default function HostPage() {
                       <button className="btn small" onClick={() => setEditingRules(true)}>Opciones</button>
                     </div>
                   )}
-                  <RulesSummary rules={view.rules} />
+                  <RulesSummary rules={view.rules} picks={view.picks} />
                 </>
               )}
             </div>

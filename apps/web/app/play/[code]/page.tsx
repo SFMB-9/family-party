@@ -96,7 +96,7 @@ export default function PlayPage() {
             <p className="pixel-title small">¡Listo!</p>
             <p className="hint">Esperando a que el anfitrión empiece…</p>
             <Scoreboard view={view} connected={connected} me={me} />
-            <RulesSummary rules={view.rules} />
+            <RulesSummary rules={view.rules} picks={view.picks} />
           </section>
         )}
 

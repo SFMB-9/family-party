@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { describeError as describeErrorText } from "./lib/errors";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
+import type { PackInfo } from "@family-party/protocol";
+import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type Pick, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- helpers
 
@@ -486,7 +487,7 @@ function BookletIcon() {
  * "Reglas de esta partida" as a booklet: closed by default so the lobby stays simple,
  * but it says when the host changed something, and changed rules are gold inside.
  */
-export function RulesSummary({ rules }: { rules: Rules }) {
+export function RulesSummary({ rules, picks = [] }: { rules: Rules; picks?: Pick[] }) {
   const [open, setOpen] = useState(false);
   const changed = RULE_KEYS.filter((k) => rules[k] !== DEFAULT_RULES[k]);
   const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
@@ -507,6 +508,11 @@ export function RulesSummary({ rules }: { rules: Rules }) {
       isChanged("mixed", "columns", "rows"),
     ],
   ];
+  if (picks.length > 0) {
+    const names = picks.map((p) => p.category);
+    const shown = names.slice(0, 5).join(", ");
+    rows.push(["Preguntas", names.length > 5 ? `${shown} y ${names.length - 5} más` : shown, false]);
+  }
 
   return (
     <aside className="rules-corner">
@@ -552,30 +558,47 @@ function Choice<K extends keyof Rules>({ label, field, rules, onChange }: {
   );
 }
 
+type Options = { rules: Rules; picks: Pick[] };
+
+const pickKey = (p: Pick) => `${p.pack}\u0000${p.category}`;
+const samePicks = (a: Pick[], b: Pick[]) => a.length === b.length && a.every((p) => b.some((q) => pickKey(q) === pickKey(p)));
+const allPicksOf = (catalog: PackInfo[]): Pick[] => catalog.flatMap((p) => p.categories.map((c) => ({ pack: p.id, category: c.name })));
+
+/** Cards each category column needs with these rules and this many players (at least 1, so an empty lobby isn't misleading). */
+const neededPerCategory = (rules: Rules, players: number) => rowsFor(rules, Math.max(players, 1));
+
 /**
- * Host lobby: house rules as a draft. Nothing reaches the server (or the phones)
- * until Guardar; the panel closes only once the saved rules come back in a snapshot,
- * so a rejected save never looks like it worked.
+ * Host lobby: house rules and categories as one draft, in two tabs. Nothing reaches the
+ * server (or the phones) until Guardar; the panel closes only once the saved values come
+ * back in a snapshot, so a rejected save never looks like it worked.
  */
-export function RulesPanel({ rules, players, error, onSave, onClose }: {
+export function OptionsPanel({ rules, picks, catalog, players, error, onSave, onClose }: {
   rules: Rules;
+  picks: Pick[];
+  catalog: PackInfo[] | null;
   players: number;
   error: string | null;
-  onSave: (rules: Rules) => boolean;
+  onSave: (next: Options, changed: { rules: boolean; picks: boolean }) => boolean;
   onClose: () => void;
 }) {
-  const [draft, setDraft] = useState(rules);
+  const [tab, setTab] = useState<"rules" | "questions">("questions"); // what to play first, then how
+  const [draft, setDraft] = useState<Options>({ rules, picks });
   const [saving, setSaving] = useState<"idle" | "waiting" | "failed">("idle");
-  const edit = (patch: Partial<Rules>) => {
+  const editRules = (patch: Partial<Rules>) => {
     setSaving("idle");
-    setDraft((d) => ({ ...d, ...patch }));
+    setDraft((d) => ({ ...d, rules: { ...d.rules, ...patch } }));
   };
-  const dirty = !sameRules(draft, rules);
+  const editPicks = (next: Pick[]) => {
+    setSaving("idle");
+    setDraft((d) => ({ ...d, picks: next }));
+  };
+  const changed = { rules: !sameRules(draft.rules, rules), picks: !samePicks(draft.picks, picks) };
+  const dirty = changed.rules || changed.picks;
 
-  // Saved: the server's rules now match the draft.
+  // Saved: the server's values now match the draft.
   useEffect(() => {
-    if (saving === "waiting" && sameRules(rules, draft)) onClose();
-  }, [saving, rules, draft, onClose]);
+    if (saving === "waiting" && sameRules(rules, draft.rules) && samePicks(picks, draft.picks)) onClose();
+  }, [saving, rules, picks, draft, onClose]);
   // Rejected, or no answer at all.
   useEffect(() => {
     if (saving !== "waiting") return;
@@ -584,44 +607,42 @@ export function RulesPanel({ rules, players, error, onSave, onClose }: {
     return () => clearTimeout(t);
   }, [saving, error]);
 
-  const save = () => setSaving(onSave(draft) ? "waiting" : "failed");
-  const rows = rowsFor(draft, players);
-  const cards = draft.columns * rows;
-  const uneven = players > 1 && cards % players !== 0;
+  const needed = neededPerCategory(draft.rules, players);
+  const countOf = (p: Pick) => catalog?.find((pk) => pk.id === p.pack)?.categories.find((c) => c.name === p.category)?.count ?? 0;
+  const playable = draft.picks.filter((p) => draft.rules.mixed || countOf(p) >= needed);
+  const canSave = !catalog || playable.length > 0;
+
+  const save = () => setSaving(onSave(draft, changed) ? "waiting" : "failed");
+  const defaults = tab === "rules" ? sameRules(draft.rules, DEFAULT_RULES) : !catalog || samePicks(draft.picks, allPicksOf(catalog));
+  const reset = () => (tab === "rules" ? editRules(DEFAULT_RULES) : catalog && editPicks(allPicksOf(catalog)));
+
   return (
     <div className="rules-panel">
-      <Choice label="Respuesta incorrecta" field="wrongAnswer" rules={draft} onChange={edit} />
-      <Choice label="Tiempo" field="timer" rules={draft} onChange={edit} />
-      <Choice label="Robos" field="steals" rules={draft} onChange={edit} />
-      {draft.steals !== "off" && draft.timer !== "off" && (
-        <Choice label="Tiempo para robar" field="stealTime" rules={draft} onChange={edit} />
+      <div className="tabs" role="tablist">
+        <button role="tab" aria-selected={tab === "questions"} className={`tab ${tab === "questions" ? "on" : ""}`} onClick={() => setTab("questions")}>
+          Preguntas{changed.picks && <span className="tab-dot" aria-label="sin guardar" />}
+        </button>
+        <button role="tab" aria-selected={tab === "rules"} className={`tab ${tab === "rules" ? "on" : ""}`} onClick={() => setTab("rules")}>
+          Reglas{changed.rules && <span className="tab-dot" aria-label="sin guardar" />}
+        </button>
+      </div>
+
+      {tab === "rules" ? (
+        <RulesFields rules={draft.rules} players={players} onChange={editRules} />
+      ) : (
+        <PicksFields catalog={catalog} picks={draft.picks} rules={draft.rules} players={players} onChange={editPicks} />
       )}
-      <Choice label="Tablero" field="mixed" rules={draft} onChange={edit} />
-      <Choice label={draft.mixed ? "Columnas" : "Categorías"} field="columns" rules={draft} onChange={edit} />
-      <Choice label={draft.mixed ? "Cartas por columna" : "Cartas por categoría"} field="rows" rules={draft} onChange={edit} />
-      <p className={`hint ${uneven ? "warn" : ""}`}>
-        {players === 0
-          ? `${draft.columns} columnas × ${draft.rows === "players" ? "1 carta por jugador" : `${draft.rows} cartas`}`
-          : uneven
-            ? `${cards} cartas para ${players} jugadores: no todos tendrán los mismos turnos.`
-            : `${cards} cartas: ${cards / Math.max(players, 1)} turno${cards / Math.max(players, 1) === 1 ? "" : "s"} por jugador.`}
-      </p>
+
       {saving === "failed" && (
         <p className="hint warn" role="alert">No se guardó: {describeErrorText(error) ?? "el servidor no respondió"}. Intenta de nuevo.</p>
       )}
       <div className="panel-footer">
-        <button
-          className="link-btn"
-          disabled={sameRules(draft, DEFAULT_RULES)}
-          onClick={() => edit(DEFAULT_RULES)}
-        >
-          Restablecer
-        </button>
+        <button className="link-btn" disabled={defaults} onClick={reset}>Restablecer</button>
         <div className="panel-footer-actions">
           {dirty ? (
             <>
-              <button className="btn small quiet" onClick={() => { setSaving("idle"); setDraft(rules); }}>Cancelar</button>
-              <button className="btn small" disabled={saving === "waiting"} onClick={save}>
+              <button className="btn small quiet" onClick={() => { setSaving("idle"); setDraft({ rules, picks }); }}>Cancelar</button>
+              <button className="btn small" disabled={saving === "waiting" || !canSave} onClick={save}>
                 {saving === "waiting" ? "Guardando…" : "Guardar"}
               </button>
             </>
@@ -631,6 +652,117 @@ export function RulesPanel({ rules, players, error, onSave, onClose }: {
         </div>
       </div>
     </div>
+  );
+}
+
+function RulesFields({ rules, players, onChange }: { rules: Rules; players: number; onChange: (patch: Partial<Rules>) => void }) {
+  const rows = rowsFor(rules, players);
+  const cards = rules.columns * rows;
+  const uneven = players > 1 && cards % players !== 0;
+  return (
+    <>
+      <Choice label="Respuesta incorrecta" field="wrongAnswer" rules={rules} onChange={onChange} />
+      <Choice label="Tiempo" field="timer" rules={rules} onChange={onChange} />
+      <Choice label="Robos" field="steals" rules={rules} onChange={onChange} />
+      {rules.steals !== "off" && rules.timer !== "off" && (
+        <Choice label="Tiempo para robar" field="stealTime" rules={rules} onChange={onChange} />
+      )}
+      <Choice label="Tablero" field="mixed" rules={rules} onChange={onChange} />
+      <Choice label={rules.mixed ? "Columnas" : "Categorías"} field="columns" rules={rules} onChange={onChange} />
+      <Choice label={rules.mixed ? "Cartas por columna" : "Cartas por categoría"} field="rows" rules={rules} onChange={onChange} />
+      <p className={`hint ${uneven ? "warn" : ""}`}>
+        {players === 0
+          ? `${rules.columns} columnas × ${rules.rows === "players" ? "1 carta por jugador" : `${rules.rows} cartas`}`
+          : uneven
+            ? `${cards} cartas para ${players} jugadores: no todos tendrán los mismos turnos.`
+            : `${cards} cartas: ${cards / Math.max(players, 1)} turno${cards / Math.max(players, 1) === 1 ? "" : "s"} por jugador.`}
+      </p>
+    </>
+  );
+}
+
+/**
+ * Packs and their categories as chips. A category that can't fill a column with the
+ * current players and rules is dashed and explains why; it comes back on its own when
+ * players leave or rows shrink. On a mixed board every category counts (one shared pool).
+ */
+function PicksFields({ catalog, picks, rules, players, onChange }: {
+  catalog: PackInfo[] | null; picks: Pick[]; rules: Rules; players: number; onChange: (picks: Pick[]) => void;
+}) {
+  if (!catalog) return <p className="hint">Cargando categorías…</p>;
+  const needed = neededPerCategory(rules, players);
+  const picked = new Set(picks.map(pickKey));
+  const fits = (count: number) => rules.mixed || count >= needed;
+
+  const all = catalog.flatMap((p) => p.categories.map((c) => ({ pick: { pack: p.id, category: c.name }, count: c.count })));
+  const chosen = all.filter((c) => picked.has(pickKey(c.pick)));
+  const playable = chosen.filter((c) => fits(c.count));
+  const short = chosen.length - playable.length;
+  const pool = playable.reduce((n, c) => n + c.count, 0);
+
+  const toggle = (p: Pick) => onChange(picked.has(pickKey(p)) ? picks.filter((x) => pickKey(x) !== pickKey(p)) : [...picks, p]);
+  const setPack = (packId: string, on: boolean) => {
+    const others = picks.filter((p) => p.pack !== packId);
+    const pack = catalog.find((p) => p.id === packId)!;
+    onChange(on ? [...others, ...pack.categories.map((c) => ({ pack: packId, category: c.name }))] : others);
+  };
+
+  let summary: ReactNode;
+  if (playable.length === 0) summary = <span className="warn-text">Elige al menos una categoría con suficientes preguntas</span>;
+  else if (rules.mixed) {
+    summary = pool >= rules.columns * needed
+      ? <>Tablero mezclado: <b>{rules.columns * needed}</b> cartas de <b>{playable.length}</b> categorías</>
+      : <span className="warn-text">Solo hay {pool} preguntas para {rules.columns * needed} cartas: el tablero saldrá más chico</span>;
+  } else if (playable.length > rules.columns) summary = <>Elegidas <b>{playable.length}</b> categorías · se juegan <b>{rules.columns}</b> al azar</>;
+  else summary = <>Se juegan las <b>{playable.length}</b>{playable.length < rules.columns && " (el tablero tendrá menos columnas)"}</>;
+
+  return (
+    <>
+      <p className="pick-summary">
+        {summary}
+        {short > 0 && playable.length > 0 && <span className="muted"> · {short} sin suficientes preguntas</span>}
+      </p>
+      <div className="packs">
+        {catalog.map((pack) => {
+          const usable = pack.categories.filter((c) => fits(c.count));
+          const allOn = usable.length > 0 && usable.every((c) => picked.has(pickKey({ pack: pack.id, category: c.name })));
+          return (
+            <div key={pack.id} className="pack">
+              <div className="pack-head">
+                <span className="pack-name">{pack.name}</span>
+                <button className="link-btn" onClick={() => setPack(pack.id, !allOn)}>{allOn ? "Quitar todas" : "Elegir todas"}</button>
+              </div>
+              <div className="chips">
+                {pack.categories.map((c) => {
+                  const p = { pack: pack.id, category: c.name };
+                  const ok = fits(c.count);
+                  const on = picked.has(pickKey(p));
+                  return (
+                    <button
+                      key={c.name}
+                      className={`chip ${on && ok ? "on" : ""} ${ok ? "" : "off-limit"}`}
+                      aria-pressed={on && ok}
+                      disabled={!ok}
+                      title={ok ? undefined : `Con estas reglas cada categoría necesita ${needed} preguntas`}
+                      onClick={() => toggle(p)}
+                    >
+                      {c.name} <small>{ok ? c.count : `${c.count} · necesita ${needed}`}</small>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {!rules.mixed && (
+        <p className="hint">
+          {rules.rows === "players"
+            ? `${Math.max(players, 1)} jugador${players === 1 || players === 0 ? "" : "es"} · 1 carta por jugador: cada categoría necesita al menos ${needed} pregunta${needed === 1 ? "" : "s"}.`
+            : `${needed} cartas por categoría: cada categoría necesita al menos ${needed} preguntas.`}
+        </p>
+      )}
+    </>
   );
 }
 

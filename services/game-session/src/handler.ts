@@ -4,7 +4,7 @@
  */
 import { createHash, randomBytes, randomInt } from "node:crypto";
 import type { APIGatewayProxyResultV2, APIGatewayProxyWebsocketEventV2 } from "aws-lambda";
-import { catalog, selectQuestions } from "@family-party/question-bank";
+import { catalog, defaultPicks, picksExist, selectQuestions } from "@family-party/question-bank";
 import { createApp } from "./app";
 import { ApiGatewayPush, DynamoConnections, DynamoRooms } from "./dynamo";
 import { managementEndpoint } from "./endpoint";
@@ -35,6 +35,8 @@ export async function handler(event: WebsocketEvent): Promise<APIGatewayProxyRes
     hash: (token) => createHash("sha256").update(token).digest("hex"),
     questions: (selection) => selectQuestions(selection),
     catalog: () => catalog(),
+    defaultPicks: () => defaultPicks(),
+    picksExist: (picks) => picksExist(picks),
   });
 
   switch (routeKey) {

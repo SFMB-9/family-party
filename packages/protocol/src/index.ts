@@ -5,7 +5,7 @@
  * Rule: the client never says WHO it is or WHEN something happened.
  * Identity comes from the connection (bound via a secret token), time from the server clock.
  */
-import type { CardId, Difficulty, GameError, PlayerId, PublicState, QuestionId, Rules } from "@family-party/game-core";
+import type { CardId, Difficulty, GameError, Pick, PlayerId, PublicState, QuestionId, Rules } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- client → server
 
@@ -30,6 +30,8 @@ export type ClientMessage =
   | { t: "encore" }
   /** Host only, in the lobby: change some house rules (game-core validates the values). */
   | { t: "rules"; rules: Partial<Record<keyof Rules, unknown>> }
+  /** Host only, in the lobby: which categories to play (each must exist in the catalog). */
+  | { t: "picks"; picks: Pick[] }
   /** Heartbeat: measures latency and keeps API Gateway from closing an idle socket (10 min). */
   | { t: "ping" }
   | { t: "pick"; cardId: CardId }
@@ -73,6 +75,7 @@ export type ProtocolError =
   | "NOT_A_PLAYER"      // connection isn't bound to a player
   | "BAD_TOKEN"
   | "NOT_ENOUGH_QUESTIONS_FOR_SELECTION"
+  | "UNKNOWN_CATEGORY"  // a pick names a category no pack has
   | "BUSY";             // too much contention on the room, try again
 
 // ---------------------------------------------------------------- validation
@@ -124,6 +127,12 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
       if (data.categories) msg.categories = data.categories;
       return msg;
     }
+    case "picks":
+      return Array.isArray(data.picks) &&
+        data.picks.length <= 60 &&
+        data.picks.every((p) => isObject(p) && isShortString(p.pack) && isShortString(p.category, 80))
+        ? { t: "picks", picks: (data.picks as { pack: string; category: string }[]).map(({ pack, category }) => ({ pack, category })) }
+        : null;
     case "rules":
       return isRulesPatch(data.rules) ? { t: "rules", rules: data.rules } : null;
     case "join":

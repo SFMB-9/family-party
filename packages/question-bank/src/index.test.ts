@@ -40,6 +40,12 @@ describe("selectQuestions", () => {
     expect(selectQuestions({ categories: ["Dos"] }, [pack]).map((q) => q.id)).toEqual(["b"]);
   });
 
+  it("picks select exact (pack, category) pairs, even when names repeat across packs", () => {
+    const other: Pack = { ...pack, id: "otro", questions: [{ ...pack.questions[0]!, id: "z" }] }; // also "Uno"
+    expect(selectQuestions({ picks: [{ pack: "otro", category: "Uno" }] }, [pack, other]).map((q) => q.id)).toEqual(["z"]);
+    expect(selectQuestions({ picks: [{ pack: "test", category: "Uno" }] }, [pack, other]).map((q) => q.id)).toEqual(["a"]);
+  });
+
   it("filters by pack", () => {
     const other: Pack = { ...pack, id: "otro", questions: [{ ...pack.questions[0]!, id: "z" }] };
     expect(selectQuestions({ packs: ["otro"] }, [pack, other]).map((q) => q.id)).toEqual(["z"]);

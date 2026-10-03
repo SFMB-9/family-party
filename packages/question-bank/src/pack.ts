@@ -2,7 +2,7 @@
  * Pack format, validation and selection. No JSON imports here, so plain Node
  * (scripts/import-unity.ts) can load this file too.
  */
-import type { Difficulty, Question } from "@family-party/game-core";
+import type { Difficulty, Pick, Question } from "@family-party/game-core";
 import type { PackInfo } from "@family-party/protocol";
 
 /** Authoring format: what a person (or the Unity importer) writes in a pack file. */
@@ -73,12 +73,21 @@ export function toGameQuestion(q: PackQuestion): Question {
 }
 
 export interface Selection {
-  packs?: string[];        // default: all packs
-  categories?: string[];   // default: every category in those packs
+  /** Exact (pack, category) pairs, as picked in the lobby. When present, packs/categories are ignored. */
+  picks?: Pick[];
+  packs?: string[];        // legacy (rooms created on the home page): default all packs
+  categories?: string[];   // legacy: default every category in those packs
 }
 
 /** The questions a room may deal from. Hidden questions are never included. */
 export function selectQuestions(selection: Selection, packs: Pack[]): Question[] {
+  if (selection.picks?.length) {
+    const wanted = new Set(selection.picks.map((p) => pickKey(p.pack, p.category)));
+    return packs
+      .flatMap((p) => p.questions.filter((q) => !q.hidden && wanted.has(pickKey(p.id, q.category))))
+      .map(toGameQuestion);
+  }
+
   const chosenPacks = selection.packs?.length ? packs.filter((p) => selection.packs!.includes(p.id)) : packs;
   const wanted = selection.categories?.length ? new Set(selection.categories) : null;
 
@@ -86,6 +95,19 @@ export function selectQuestions(selection: Selection, packs: Pack[]): Question[]
     .flatMap((p) => p.questions)
     .filter((q) => !q.hidden && (wanted === null || wanted.has(q.category)))
     .map(toGameQuestion);
+}
+
+const pickKey = (pack: string, category: string) => `${pack}\u0000${category}`;
+
+/** Every category of every pack: what a new room starts with. */
+export function allPicks(packs: Pack[]): Pick[] {
+  return catalog(packs).flatMap((p) => p.categories.map((c) => ({ pack: p.id, category: c.name })));
+}
+
+/** Picks that name a category some pack really has. */
+export function picksExist(picks: Pick[], packs: Pack[]): boolean {
+  const known = new Set(allPicks(packs).map((p) => pickKey(p.pack, p.category)));
+  return picks.every((p) => known.has(pickKey(p.pack, p.category)));
 }
 
 /** What the lobby shows: pack names and category sizes. Never includes answers. */

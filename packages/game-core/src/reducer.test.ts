@@ -732,3 +732,35 @@ describe("rules", () => {
     });
   });
 });
+
+// ---- picks ----
+describe("SET_PICKS", () => {
+  const pick = (category: string, pack = "clasico") => ({ pack, category });
+
+  it("stores the picked categories (lobby only), and they survive a rematch", () => {
+    let s = ok(reduce(lobbyWith("ana"), { type: "SET_PICKS", picks: [pick("Historia"), pick("Viajes", "familia")] }));
+    expect(s.picks).toEqual([pick("Historia"), pick("Viajes", "familia")]);
+    s = ok(reduce(s, { type: "START", questions: bank, seed: 1 }));
+    expect(reduce(s, { type: "SET_PICKS", picks: [pick("Ciencia")] })).toEqual({ ok: false, error: "WRONG_PHASE" });
+    s = ok(reduce(ok(reduce(s, { type: "END" })), { type: "REMATCH", keep: ["ana"] }));
+    expect(s.picks).toHaveLength(2);
+  });
+
+  it("the same category name in two packs is two different picks", () => {
+    const s = ok(reduce(lobbyWith("ana"), { type: "SET_PICKS", picks: [pick("Historia"), pick("Historia", "familia")] }));
+    expect(s.picks).toHaveLength(2);
+  });
+
+  it.each([
+    { name: "empty", picks: [] },
+    { name: "duplicates", picks: [pick("Historia"), pick("Historia")] },
+    { name: "too many", picks: Array.from({ length: 61 }, (_, i) => pick(`c${i}`)) },
+  ])("rejects $name", ({ picks }) => {
+    expect(reduce(lobbyWith("ana"), { type: "SET_PICKS", picks })).toEqual({ ok: false, error: "INVALID_PICKS" });
+  });
+
+  it("strips anything extra the caller attached", () => {
+    const sneaky = { pack: "clasico", category: "Historia", correct: [0] } as ReturnType<typeof pick>;
+    expect(ok(reduce(lobbyWith("ana"), { type: "SET_PICKS", picks: [sneaky] })).picks).toEqual([pick("Historia")]);
+  });
+});
