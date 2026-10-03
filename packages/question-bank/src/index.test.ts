@@ -41,7 +41,8 @@ describe("selectQuestions", () => {
   });
 
   it("filters by pack", () => {
-    expect(selectQuestions({ packs: ["clasico"] }).every((q) => !q.id.startsWith("familia"))).toBe(true);
+    const other: Pack = { ...pack, id: "otro", questions: [{ ...pack.questions[0]!, id: "z" }] };
+    expect(selectQuestions({ packs: ["otro"] }, [pack, other]).map((q) => q.id)).toEqual(["z"]);
   });
 
   it("converts seconds to milliseconds and keeps the points override", () => {
@@ -64,19 +65,19 @@ describe("Unity importer", () => {
     expect(decodeUnityIntList("0300000001000000")).toEqual([3, 1]);
   });
 
-  it("converts the real 2023 asset", () => {
+  it("converts a Unity asset (synthetic fixture with every real-world quirk)", () => {
     const text = readFileSync(new URL("./__fixtures__/QuestionBank.asset", import.meta.url), "utf8");
-    const pack = importUnityAsset(text, { id: "familia", name: "Familia" });
+    const pack = importUnityAsset(text, { id: "importado", name: "Importado" });
 
     expect(validatePack(pack)).toEqual([]);
     expect(pack.questions).toHaveLength(2);
 
-    const [boda, avatar] = pack.questions;
-    expect(boda!.text).toBe("¿Cuándo se casaron Matere y Pa Salvador?");   // \xBF and \xE1 decoded
-    expect(boda!.category).toBe("Familia");
-    expect(boda!.correct).toEqual([0]);
-    expect(boda!.difficulty).toBe(2);                                     // Unity's 0 = unset
-    expect(boda!.timeLimitSec).toBe(10);
+    const [club, avatar] = pack.questions;
+    expect(club!.text).toBe("¿Cuándo se fundó el club de ajedrez del pueblo?"); // \xBF, \xE1, \xF3 decoded
+    expect(club!.category).toBe("Familia");
+    expect(club!.correct).toEqual([0]);
+    expect(club!.difficulty).toBe(2);                                     // Unity's 0 = unset
+    expect(club!.timeLimitSec).toBe(10);
 
     expect(avatar!.text).toContain("Avatar: The Last Airbender?");          // folded line joined
     expect(avatar!.options[avatar!.correct[0]!]).toBe("Obito Uchiha");

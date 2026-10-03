@@ -15,12 +15,12 @@ MonoBehaviour:
   questions:
   - category: 1
     number: 0
-    questionString: "\xBFCu\xE1ndo se casaron Matere y Pa Salvador?"
+    questionString: "\xBFCu\xE1ndo se fund\xF3 el club de ajedrez del pueblo?"
     answers:
-    - 24 abril 1965
-    - 14 abril 1965
-    - 14 agosto 1965
-    - 24 agosto 1965
+    - 3 marzo 1971
+    - 13 marzo 1971
+    - 3 mayo 1971
+    - 13 mayo 1971
     correctAnswers: 00000000
     timeLimit: 10
     points: 0
