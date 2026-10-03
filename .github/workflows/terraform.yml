@@ -116,7 +116,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --filter @family-party/game-session build
 
-      - uses: aws-actions/configure-aws-ccredentials@v6
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_APPLY_ROLE_ARN }}
           aws-region: mx-central-1
