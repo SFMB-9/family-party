@@ -86,6 +86,9 @@ export default function Home() {
       <section className="panel">
         <h2 className="pixel-title small">Crear una sala</h2>
         <p className="hint">Abre esto en la pantalla que todos verán (la tele, o la que compartas en Discord).</p>
+        <p className="hint warn phone-only">
+          Desde el celular funciona, pero el tablero se ve mejor en una pantalla grande.
+        </p>
         {!packs && <p className="hint">Cargando categorías…</p>}
         <div className="chips">
           {categories.map((c) => (
