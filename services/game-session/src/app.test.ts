@@ -147,6 +147,14 @@ describe("playing", () => {
     expect(errorOf("ana")).toBe("NOT_HOST");
   });
 
+  it("only the host can end the game early", async () => {
+    await startedGame();
+    await send("ana", { t: "end" });
+    expect(errorOf("ana")).toBe("NOT_HOST");
+    await send("host", { t: "end" });
+    expect(stateOf("ana").view.phase).toEqual({ kind: "gameOver" });
+  });
+
   it("plays a turn end to end, with identity taken from the connection", async () => {
     const { ana } = await startedGame();
     const board = stateOf("host").view.board;

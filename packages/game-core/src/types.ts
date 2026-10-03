@@ -49,6 +49,7 @@ export interface Card {
   id: CardId;
   category: Category;
   questionId: QuestionId;
+  value: number;       // stake when opened, shown on the board ($100–$500); steals halve it from there
   played: boolean;
 }
 
@@ -63,8 +64,24 @@ export type Phase =
       stake: number;
       deadline: number | null;
       tried: PlayerId[];
+      results: AnswerResult[]; // everyone who answered this card so far, in order
     }
   | { kind: "gameOver" };
+
+/** One attempt at a card. `choice: null` means the time ran out. */
+export interface AnswerResult {
+  playerId: PlayerId;
+  choice: number | null;
+  delta: number;
+}
+
+/** What happened on the last card that closed: shown to everyone for a few seconds. */
+export interface Reveal {
+  cardId: CardId;
+  questionId: QuestionId;
+  results: AnswerResult[];
+  closedAt: number; // server time
+}
 
 export interface GameState {
   players: Player[];
@@ -75,6 +92,7 @@ export interface GameState {
   attempts: Record<QuestionId, Record<PlayerId, boolean>>; // who tried each question, and whether they got it right
   turnOwner: number; // index into players
   phase: Phase;
+  reveal: Reveal | null;
   seed: number;
 }
 
@@ -86,7 +104,9 @@ export type Action =
   | { type: "PICK_CARD"; playerId: PlayerId; cardId: CardId; at: number }
   | { type: "ANSWER"; playerId: PlayerId; choice: number; at: number }
   | { type: "TIMEOUT"; at: number }
-  | { type: "RATE"; playerId: PlayerId; questionId: QuestionId; difficulty: Difficulty };
+  | { type: "RATE"; playerId: PlayerId; questionId: QuestionId; difficulty: Difficulty }
+  /** Finish early: straight to the podium with the scores as they are. */
+  | { type: "END" };
 
 // ---- Result: invalid actions are expected, not exceptional ----
 export type GameError =
@@ -104,6 +124,17 @@ export type PublicChoiceSpec = Omit<ChoiceSpec, "correct">;
 // ---- What clients are allowed to see ----
 export type PublicQuestion = Omit<Question, "response"> & { response: PublicChoiceSpec };
 
+/** The last closed card, WITH its answer: safe to show once nobody can answer it anymore. */
+export interface PublicReveal {
+  cardId: CardId;
+  category: Category;
+  text: string;
+  options: string[];
+  correct: number[];
+  results: AnswerResult[];
+  closedAt: number;
+}
+
 export interface PublicState {
   players: Player[];
   scores: Record<PlayerId, number>;
@@ -112,6 +143,7 @@ export interface PublicState {
   phase: Phase;
   /** Only the question currently being answered, without its answer. */
   current: PublicQuestion | null;
+  reveal: PublicReveal | null;
 }
 
 export interface Ranking {

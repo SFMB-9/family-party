@@ -4,6 +4,7 @@ import { isRoomCode, parseClientMessage } from "./index";
 describe("parseClientMessage", () => {
   it("accepts well-formed messages", () => {
     expect(parseClientMessage('{"t":"hello"}')).toEqual({ t: "hello" });
+    expect(parseClientMessage('{"t":"end"}')).toEqual({ t: "end" });
     expect(parseClientMessage('{"t":"hello","token":"abc"}')).toEqual({ t: "hello", token: "abc" });
     expect(parseClientMessage('{"t":"join","name":"Ana"}')).toEqual({ t: "join", name: "Ana" });
     expect(parseClientMessage('{"t":"pick","cardId":"Historia-0"}')).toEqual({ t: "pick", cardId: "Historia-0" });

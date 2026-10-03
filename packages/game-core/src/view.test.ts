@@ -75,3 +75,19 @@ describe("rankings", () => {
     expect(r.map((x) => x.player.id)).toEqual(["beto", "ana"]);
   });
 });
+
+describe("publicView reveal", () => {
+  it("shows the answer only after the card has closed", () => {
+    const g = playing();
+    const card = g.board[0]!;
+    const opened = ok(reduce(g, { type: "PICK_CARD", playerId: "ana", cardId: card.id, at: 0 }));
+    expect(publicView(opened).reveal).toBeNull();
+
+    const q = opened.questions[card.questionId]!;
+    const closed = ok(reduce(opened, { type: "ANSWER", playerId: "ana", choice: q.response.correct[0]!, at: 5 }));
+    const reveal = publicView(closed).reveal!;
+    expect(reveal.text).toBe(q.prompt.text);
+    expect(reveal.options[reveal.correct[0]!]).toBe("B");   // the bank's right answer is "B"
+    expect(reveal.results).toEqual([{ playerId: "ana", choice: q.response.correct[0], delta: 200 }]);
+  });
+});

@@ -20,6 +20,8 @@ export type ClientMessage =
   | { t: "join"; name: string }
   /** Host only. */
   | { t: "start" }
+  /** Host only: finish now and show the podium. */
+  | { t: "end" }
   | { t: "pick"; cardId: CardId }
   | { t: "answer"; choice: number }
   /** "My countdown hit zero." The server checks against its own clock. */
@@ -90,6 +92,7 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
       return data.token === undefined ? { t: "hello" } : { t: "hello", token: data.token };
     case "catalog":
     case "start":
+    case "end":
     case "timeout":
       return { t: data.t };
     case "create": {
