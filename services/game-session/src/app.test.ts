@@ -239,3 +239,51 @@ describe("bad input", () => {
     expect(errorOf("x")).toBe("NO_ROOM");
   });
 });
+
+describe("after the game", () => {
+  async function onPodium() {
+    const { code } = await createRoom();
+    const ana = await joinAs("ana", code, "Ana");
+    const beto = await joinAs("beto", code, "Beto");
+    await send("host", { t: "start" });
+    await send("host", { t: "end" });
+    return { code, ana, beto };
+  }
+
+  it("players ask for another round; the host sees who", async () => {
+    const { ana } = await onPodium();
+    await send("ana", { t: "encore" });
+    expect(stateOf("host").view.encore).toEqual([ana.playerId]);
+    await send("host", { t: "encore" });
+    expect(errorOf("host")).toBe("NOT_A_PLAYER");
+  });
+
+  it("rematch keeps whoever is still here; the one who left needs to join again", async () => {
+    const { code, ana, beto } = await onPodium();
+    await app.disconnect("beto");                        // Beto tapped "Salir"
+
+    await send("ana", { t: "rematch" });
+    expect(errorOf("ana")).toBe("NOT_HOST");
+    await send("host", { t: "rematch" });
+
+    const view = stateOf("host").view;
+    expect(view.phase).toEqual({ kind: "lobby" });
+    expect(view.players.map((p) => p.id)).toEqual([ana.playerId]);
+    expect(view.scores).toEqual({ [ana.playerId]: 0 });
+
+    // Beto's old token no longer seats him: he's a viewer and can join fresh.
+    await app.connect("beto-again", code);
+    await send("beto-again", { t: "hello", token: beto.token });
+    expect(errorOf("beto-again")).toBe("BAD_TOKEN");
+    expect(stateOf("beto-again").you).toEqual({ role: "viewer" });
+  });
+
+  it("only the host closes the room, and everyone sees it closed", async () => {
+    await onPodium();
+    await send("beto", { t: "close" });
+    expect(errorOf("beto")).toBe("NOT_HOST");
+    await send("host", { t: "close" });
+    expect(stateOf("ana").view.phase).toEqual({ kind: "closed" });
+    expect(stateOf("beto").view.phase).toEqual({ kind: "closed" });
+  });
+});

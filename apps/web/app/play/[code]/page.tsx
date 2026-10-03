@@ -1,10 +1,13 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { Board, Podium, QuestionPanel, REVEAL_MS, Reveal, Scoreboard, money, nameOf, stageOf, useServerNow } from "../../components";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useState, type FormEvent } from "react";
+import {
+  Board, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Scoreboard, money, nameOf, stageOf, useServerNow,
+} from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
+import { tokenStore } from "../../lib/storage";
 import { useRoom } from "../../lib/useRoom";
 
 /**
@@ -19,6 +22,8 @@ export default function PlayPage() {
   const [dismissed, setDismissed] = useState<number | null>(null);
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
+  const router = useRouter();
+  const forget = useCallback(() => tokenStore.clear(code, "player"), [code]);
 
   if (missingConfig) return <Message text="Falta NEXT_PUBLIC_WS_URL." />;
   if (status === "not-found") return <Message text={`La sala ${code} no existe o ya expiró.`} />;
@@ -30,6 +35,12 @@ export default function PlayPage() {
   const myAnswer = view.phase.kind === "answering" && view.phase.answerer === me;
   const myScore = me ? view.scores[me] ?? 0 : 0;
   const revealing = !!reveal && reveal.closedAt !== dismissed && serverNow - reveal.closedAt <= REVEAL_MS;
+
+  /** Leaving gives up the seat: a rematch only keeps phones still in the room. */
+  const leave = () => {
+    forget();
+    router.push("/");
+  };
 
   const onJoin = (e: FormEvent) => {
     e.preventDefault();
@@ -47,7 +58,7 @@ export default function PlayPage() {
         {status !== "open" && <p className="notice">Reconectando…</p>}
         {error && <p className="notice error">{describeError(error)}</p>}
 
-        {me && view.phase.kind !== "lobby" && (
+        {me && view.phase.kind !== "lobby" && view.phase.kind !== "closed" && (
           <p className="me-bar">
             <span>{nameOf(view, me)}</span>
             <span className="score">{money(myScore)}</span>
@@ -62,7 +73,7 @@ export default function PlayPage() {
           </form>
         )}
 
-        {!me && view.phase.kind !== "lobby" && view.phase.kind !== "gameOver" && (
+        {!me && (view.phase.kind === "picking" || view.phase.kind === "answering") && (
           <p className="notice">La partida ya empezó. Puedes mirar desde aquí.</p>
         )}
 
@@ -94,7 +105,18 @@ export default function PlayPage() {
           <Scoreboard view={view} connected={connected} me={me} />
         )}
 
-        {view.phase.kind === "gameOver" && !revealing && <Podium view={view} />}
+        {view.phase.kind === "gameOver" && !revealing && (
+          <Podium view={view}>
+            <div className="after-game">
+              {me && (view.encore.includes(me)
+                ? <p className="banner">¡Listo! Le avisamos al anfitrión.</p>
+                : <button className="btn big" onClick={() => send({ t: "encore" })}>¡Otra ronda!</button>)}
+              <button className="btn small quiet" onClick={leave}>Salir</button>
+            </div>
+          </Podium>
+        )}
+
+        {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
       {revealing && <Reveal view={view} serverNow={serverNow} onClose={() => setDismissed(reveal!.closedAt)} />}

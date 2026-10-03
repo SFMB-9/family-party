@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { rankings, type Card, type Phase, type PlayerId, type PublicState } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- helpers
@@ -300,7 +301,7 @@ export function Announcement({ view, holdWhile }: { view: PublicState; holdWhile
 
 const PLACES = ["Primer lugar", "Segundo lugar", "Tercer lugar"];
 
-export function Podium({ view }: { view: PublicState }) {
+export function Podium({ view, children }: { view: PublicState; children?: ReactNode }) {
   const ranked = rankings(view);
   const top = ranked.filter((r) => r.rank <= 3);
   const rest = ranked.filter((r) => r.rank > 3);
@@ -334,7 +335,64 @@ export function Podium({ view }: { view: PublicState }) {
             ))}
           </ol>
         )}
+        {children}
       </div>
+    </section>
+  );
+}
+
+/** Host podium: who asked for another round, as avatars. */
+export function EncoreList({ view, connected }: { view: PublicState; connected: PlayerId[] }) {
+  const here = view.players.filter((p) => connected.includes(p.id));
+  const wanting = view.players.filter((p) => view.encore.includes(p.id));
+  if (wanting.length === 0) return <p className="hint">Los jugadores pueden pedir otra ronda desde su celular.</p>;
+  return (
+    <p className="encore">
+      <span className="pixel-title small">Quieren otra</span>
+      {wanting.map((p) => <Avatar key={p.id} id={p.id} name={p.name} size={36} />)}
+      <span className="count">{wanting.length}/{here.length}</span>
+    </p>
+  );
+}
+
+// ---------------------------------------------------------------- shared controls
+
+/**
+ * Two taps, no dialog: the button turns into "question Sí / No" for a few seconds.
+ * Only for things that can't be undone (ending a game, closing the room).
+ */
+export function ConfirmButton({ label, question, onConfirm }: { label: string; question: string; onConfirm: () => void }) {
+  const [asking, setAsking] = useState(false);
+  useEffect(() => {
+    if (!asking) return;
+    const t = setTimeout(() => setAsking(false), 4_000);
+    return () => clearTimeout(t);
+  }, [asking]);
+
+  if (!asking) {
+    return <button className="btn small quiet" onClick={() => setAsking(true)}>{label}</button>;
+  }
+  return (
+    <span className="end-confirm" role="group" aria-label={question}>
+      <span className="pixel-title small">{question}</span>
+      <button className="btn small danger" onClick={onConfirm}>Sí</button>
+      <button className="btn small" onClick={() => setAsking(false)}>No</button>
+    </span>
+  );
+}
+
+/** The host closed the room: say so, forget this room's seat, and go home. */
+export function RoomClosed({ onLeave }: { onLeave: () => void }) {
+  const router = useRouter();
+  useEffect(() => {
+    onLeave();
+    const t = setTimeout(() => router.replace("/"), 2_500);
+    return () => clearTimeout(t);
+  }, [onLeave, router]);
+  return (
+    <section className="waiting">
+      <p className="pixel-title">Sala cerrada</p>
+      <p className="hint">Gracias por jugar. Volviendo al inicio…</p>
     </section>
   );
 }

@@ -51,6 +51,7 @@ export function publicView(state: GameState): PublicState {
     phase: state.phase,
     current,
     reveal,
+    encore: state.encore,
   };
 }
 
