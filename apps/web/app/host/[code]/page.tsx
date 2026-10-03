@@ -26,7 +26,7 @@ export default function HostPage() {
   const joinUrl = typeof window !== "undefined" ? `${window.location.host}/play/${code}` : "";
 
   return (
-    <div className="stage" data-stage={stageOf(view.phase)}>
+    <div className="stage host-screen" data-stage={stageOf(view.phase)}>
       <main className="shell host">
         <header className="top">
           <h1 className="logo">Family Party</h1>
