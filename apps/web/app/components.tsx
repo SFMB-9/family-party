@@ -581,7 +581,7 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
   onSave: (next: Options, changed: { rules: boolean; picks: boolean }) => boolean;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState<"rules" | "questions">("rules");
+  const [tab, setTab] = useState<"rules" | "questions">("questions"); // what to play first, then how
   const [draft, setDraft] = useState<Options>({ rules, picks });
   const [saving, setSaving] = useState<"idle" | "waiting" | "failed">("idle");
   const editRules = (patch: Partial<Rules>) => {
@@ -619,11 +619,11 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
   return (
     <div className="rules-panel">
       <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={tab === "rules"} className={`tab ${tab === "rules" ? "on" : ""}`} onClick={() => setTab("rules")}>
-          Reglas{changed.rules && <span className="tab-dot" aria-label="sin guardar" />}
-        </button>
         <button role="tab" aria-selected={tab === "questions"} className={`tab ${tab === "questions" ? "on" : ""}`} onClick={() => setTab("questions")}>
           Preguntas{changed.picks && <span className="tab-dot" aria-label="sin guardar" />}
+        </button>
+        <button role="tab" aria-selected={tab === "rules"} className={`tab ${tab === "rules" ? "on" : ""}`} onClick={() => setTab("rules")}>
+          Reglas{changed.rules && <span className="tab-dot" aria-label="sin guardar" />}
         </button>
       </div>
 
