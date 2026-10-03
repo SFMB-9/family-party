@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege for the automatic GITHUB_TOKEN
+permissions:
+  contents: read
+
+# A new push to the same branch cancels the previous run instead of queueing.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+
+      - uses: pnpm/action-setup@v6 # reads "packageManager" from package.json
+
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22  # same as the Lambda runtime
+          cache: "pnpm"     # reuses downloaded packages between runs
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
