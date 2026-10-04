@@ -315,7 +315,7 @@ input {
 .waiting-players { margin: 0; font-family: var(--pixel); font-size: 12px; text-transform: uppercase; color: #fff; animation: pulse 1.6s steps(2) infinite; }
 .lobby-roster:has(.rules-panel) { gap: 12px; padding: 20px 32px; justify-content: flex-start; } /* tabs stay put when switching */
 .roster { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 84px); gap: 10px; }
-.roster li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--t1); text-align: center; overflow-wrap: anywhere; }
+.roster li { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: var(--t1); line-height: 1.05; text-align: center; overflow-wrap: anywhere; }
 .roster li.away { opacity: 0.45; }
 .roster .empty-slot { width: 72px; height: 72px; background: rgba(0, 0, 0, 0.35); justify-self: center; }
 
@@ -335,8 +335,11 @@ input {
 
 /* board: flat grey value cards; played cards go dark and textured */
 .board.mixed .card { min-height: 64px; }
-.board { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 8px; }
-.column { display: flex; flex-direction: column; gap: 8px; }
+/* Columns share the board's rows (subgrid): a category name that wraps to more lines makes the
+   whole header row taller instead of pushing only its own column's cards down. */
+.board { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); grid-template-rows: auto repeat(var(--rows), auto); gap: 8px; }
+.board.mixed { grid-template-rows: repeat(var(--rows), auto); }
+.column { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
 .category { min-height: 3.2em; display: grid; place-items: center; text-align: center; font-size: 12px; text-transform: uppercase; line-height: 1.4; padding: 6px 4px; overflow-wrap: normal; hyphens: auto; }
 .host .category { min-height: 4em; }
 /* Phones: five pixel-font columns don't fit long names; the readable sans wraps cleanly. */
@@ -345,6 +348,8 @@ input {
 [data-stage="lobby"] .host .top .room-code { visibility: hidden; }
 .card {
   aspect-ratio: 16 / 9;
+  min-width: 0; /* a grid cell would otherwise grow to fit "$300" and break the aspect ratio */
+  overflow: hidden;
   border: 0;
   border-radius: 0;
   background: var(--card);
@@ -504,7 +509,9 @@ input {
 
 .podium { display: flex; flex-direction: column; align-items: center; gap: 24px; margin-top: 4vh; }
 .after-game { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 12px; text-align: center; }
-.host .after-game { align-self: center; max-width: 340px; margin-top: 0; }
+.host .after-game { align-self: center; max-width: 420px; margin-top: 0; }
+.presence { margin: 0; font-size: var(--t1); color: var(--muted); }
+.presence.warn { color: var(--gold); font-family: var(--pixel); font-size: 24px; text-transform: uppercase; }
 .after-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .encore { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .encore .count { font-family: var(--pixel); font-size: 24px; color: var(--gold); }

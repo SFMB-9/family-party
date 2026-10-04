@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
-  Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
+  AfterGame, Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
   Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
@@ -165,7 +165,7 @@ export default function HostPage() {
                       )}
                     </div>
                   )}
-                  <RulesSummary rules={view.rules} picks={view.picks} {...(isHost && { onEdit: () => setEditingRules(true) })} />
+                  <RulesSummary rules={view.rules} picks={view.picks} catalog={catalog} {...(isHost && { onEdit: () => setEditingRules(true) })} />
                 </>
               )}
             </div>
@@ -196,14 +196,7 @@ export default function HostPage() {
         {view.phase.kind === "gameOver" && !revealing && (
           <Podium view={view}>
             {isHost && (
-              <div className="after-game">
-                <EncoreList view={view} connected={connected} />
-                <div className="after-actions">
-                  <button className="btn big" onClick={() => send({ t: "rematch" })}>Otra ronda</button>
-                  <ConfirmButton label="Cerrar sala" question="¿Cerrar la sala?" onConfirm={() => send({ t: "close" })} />
-                </div>
-                <p className="hint">Misma sala, preguntas nuevas. Quien ya salió no entra; pueden unirse más.</p>
-              </div>
+              <AfterGame view={view} connected={connected} onRematch={() => send({ t: "rematch" })} onClose={() => send({ t: "close" })} />
             )}
           </Podium>
         )}
