@@ -588,6 +588,10 @@ input {
 .nerds-detail p { margin: 0 0 8px; font-size: var(--t1h); line-height: 1.15; }
 .nerds-detail .tf { display: flex; flex-wrap: wrap; gap: 6px; }
 .nerds-detail code { font-size: 14px; padding: 2px 6px; background: rgba(0, 0, 0, 0.35); color: var(--gold); }
+.nerds-challenge { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 2px dashed var(--gold); font-size: var(--t1); line-height: 1.2; }
+.nerds-challenge .pixel-title { margin: 0; color: var(--gold); }
+.nerds-challenge b { color: #fff; font-weight: 400; }
+.nerds-challenge code { font-family: var(--pixel); font-size: 14px; letter-spacing: 1px; padding: 2px 6px; background: rgba(0, 0, 0, 0.35); color: var(--gold); }
 .nerds-foot { font-size: var(--t1); color: var(--muted); }
 .nerds-foot a { color: #fff; }
 .nerds-card > * { flex-shrink: 0; } /* the card scrolls; its parts never squash into each other */
