@@ -128,12 +128,18 @@ export interface GameState {
   rules: Rules;
   /** Categories the host picked. Empty only in rooms created before picks existed. */
   picks: Pick[];
+  /**
+   * Players who left mid-game. They stay in `players` (their score still counts on the podium,
+   * and turn indexes stay stable) but no turn or steal is ever handed to them again.
+   */
+  left: PlayerId[];
 }
 
 // ---- Actions ----
 export type Action =
   | { type: "JOIN"; player: Player }
-  | { type: "LEAVE"; playerId: PlayerId }
+  /** Lobby: removed. Mid-game: out of the turn order, score kept. `at` closes their open answer like a timeout. */
+  | { type: "LEAVE"; playerId: PlayerId; at: number }
   | { type: "START"; questions: Question[]; seed: number }
   | { type: "PICK_CARD"; playerId: PlayerId; cardId: CardId; at: number }
   | { type: "ANSWER"; playerId: PlayerId; choice: number; at: number }
@@ -192,6 +198,8 @@ export interface PublicState {
   encore: PlayerId[];
   rules: Rules;
   picks: Pick[];
+  /** Left mid-game: shown as gone, never get a turn. */
+  left: PlayerId[];
 }
 
 export interface Ranking {

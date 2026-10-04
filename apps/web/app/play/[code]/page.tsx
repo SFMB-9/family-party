@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
+  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -36,8 +36,12 @@ export default function PlayPage() {
   const myScore = me ? view.scores[me] ?? 0 : 0;
   const revealing = !!reveal && reveal.closedAt !== dismissed && serverNow - reveal.closedAt <= REVEAL_MS;
 
-  /** Leaving gives up the seat: a rematch only keeps phones still in the room. */
+  /**
+   * Leaving gives up the seat. In the lobby the name frees up; mid-game this phone drops out of
+   * the turn order (its score stays on the podium). Offline, the seat just goes quiet until a rematch.
+   */
   const leave = () => {
+    if (me) send({ t: "leave" });
     forget();
     router.push("/");
   };
@@ -97,6 +101,7 @@ export default function PlayPage() {
             <p className="hint">Esperando a que el anfitrión empiece…</p>
             <Scoreboard view={view} connected={connected} me={me} />
             <RulesSummary rules={view.rules} picks={view.picks} />
+            <button className="btn small quiet" onClick={leave}>Salir</button>
           </section>
         )}
 
@@ -117,7 +122,12 @@ export default function PlayPage() {
         )}
 
         {me && (view.phase.kind === "picking" || view.phase.kind === "answering") && (
-          <Scoreboard view={view} connected={connected} me={me} />
+          <>
+            <Scoreboard view={view} connected={connected} me={me} />
+            <div className="leave-row">
+              <ConfirmButton label="Salir" question="¿Salir de la partida?" onConfirm={leave} />
+            </div>
+          </>
         )}
 
         {view.phase.kind === "gameOver" && !revealing && (

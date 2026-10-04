@@ -28,6 +28,8 @@ export type ClientMessage =
   | { t: "close" }
   /** Player, from the podium: "I'd play another one." */
   | { t: "encore" }
+  /** Player: give up the seat. Lobby: removed. Mid-game: out of the turn order, score kept. */
+  | { t: "leave" }
   /** Host only, in the lobby: change some house rules (game-core validates the values). */
   | { t: "rules"; rules: Partial<Record<keyof Rules, unknown>> }
   /** Host only, in the lobby: try a private pack's code. A match unlocks it for this room. */
@@ -125,6 +127,7 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
     case "rematch":
     case "close":
     case "encore":
+    case "leave":
     case "timeout":
       return { t: data.t };
     case "create": {

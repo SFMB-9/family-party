@@ -49,6 +49,7 @@ export default function HostPage() {
           <CopyText className="room-code" text={code} label="el código de la sala" />
           <div className="top-right">
             {isHost && playing && <ConfirmButton label="Terminar" question="¿Terminar ya?" onConfirm={() => send({ t: "end" })} />}
+            {isHost && view.phase.kind === "lobby" && <ConfirmButton label="Cerrar sala" question="¿Cerrar la sala?" onConfirm={() => send({ t: "close" })} />}
             <ConnectionDot quality={quality} status={status} latencyMs={latencyMs} />
           </div>
         </header>

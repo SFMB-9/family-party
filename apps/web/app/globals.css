@@ -418,6 +418,8 @@ input {
 .scores li.turn { background: rgba(255, 207, 74, 0.14); }
 .scores li.me .name { color: #fff; }
 .scores li.away { opacity: 0.45; }
+.scores .gone { color: var(--muted); }
+.leave-row { display: flex; justify-content: center; margin-top: 16px; }
 .scores .rank { font-size: 12px; color: var(--muted); }
 .scores .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scores .score { font-size: 12px; position: relative; }
