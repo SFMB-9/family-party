@@ -114,3 +114,8 @@ resource "aws_s3_bucket_policy" "packs" {
   policy     = data.aws_iam_policy_document.packs_bucket.json
   depends_on = [aws_s3_bucket_public_access_block.packs]
 }
+
+output "packs_bucket" {
+  description = "Where private packs go (the pack script's PACKS_BUCKET)."
+  value       = aws_s3_bucket.packs.bucket
+}

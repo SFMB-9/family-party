@@ -1,0 +1,4 @@
+Categoría,Pregunta,Correcta,Incorrecta 1,Incorrecta 2,Incorrecta 3,Incorrecta 4,Incorrecta 5,Dificultad,Segundos,Robable
+Ejemplos,¿Cuántas patas tiene una araña?,8,6,10,12,,,1,20,sí
+,¿De qué color es el cielo en un día despejado?,Azul,Verde,,,,,,,
+,"Para no tener límite de tiempo, escribe ""sin"" en Segundos",Entendido,No entendí,,,,,2,sin,no

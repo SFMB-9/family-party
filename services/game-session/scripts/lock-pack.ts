@@ -6,10 +6,15 @@
  * Keep pack files OUTSIDE this repo (it's public). Only the scrypt hash of the code is
  * written; share the code itself with your family through a private channel.
  */
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { MIN_CODE_LENGTH, displayCode, hashCode, normalizeCode, parsePrivatePack } from "../src/packs";
 
-const [input, code, output] = process.argv.slice(2);
+const [inputArg, code, outputArg] = process.argv.slice(2);
+// pnpm --filter runs scripts from this package's folder; resolve paths from where you typed the command.
+const here = (p: string) => resolve(process.env.INIT_CWD ?? process.cwd(), p);
+const input = inputArg && here(inputArg);
+const output = outputArg && here(outputArg);
 if (!input || !code) {
   console.error("usage: lock-pack <pack.json> <CODE> [out.json]   e.g. lock-pack familia.json TAMALESABUELA26");
   process.exit(1);
@@ -29,7 +34,8 @@ if (!parsed.ok) {
   process.exit(1);
 }
 
-const out = output ?? input.replace(/\.json$/i, "") + ".locked.json";
+const out = output || input.replace(/\.json$/i, "") + ".locked.json";
+await mkdir(dirname(out), { recursive: true });
 await writeFile(out, JSON.stringify(locked, null, 2) + "\n");
 const { id } = parsed.value.pack;
 console.log(`Locked "${id}" (${parsed.value.pack.questions.length} questions) → ${out}`);

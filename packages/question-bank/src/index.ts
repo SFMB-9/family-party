@@ -12,6 +12,7 @@ import type { Pick } from "@family-party/game-core";
 import { allPicks as allPicksOf, catalog as catalogOf, picksExist as picksExistIn, selectQuestions as select, type Pack, type Selection } from "./pack";
 
 export * from "./pack";
+export * from "./sheet";
 
 /**
  * Built-in packs: public trivia only, since this repo is public.
