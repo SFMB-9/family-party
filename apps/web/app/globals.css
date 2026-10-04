@@ -271,7 +271,7 @@ input {
 /* ------------------------------------------------------------ lobby */
 
 .lobby { display: grid; grid-template-columns: 1fr 1fr; flex: 1; margin: 12px -32px -24px; }
-.lobby-join { background: var(--charcoal); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center; }
+.lobby-join { position: relative; background: var(--charcoal); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center; }
 .lobby-roster { background: var(--sage); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 32px; }
 .join-url { margin: 0; font-size: var(--t1h); color: var(--gold); }
 @media (max-width: 900px) { .lobby { grid-template-columns: 1fr; margin: 0; } }
@@ -551,3 +551,41 @@ input {
 .host-seat .seat-error { flex-basis: 100%; color: #ff8a7a; }
 .host-seat .link-btn { padding: 0; font: inherit; color: var(--muted); }
 .host-seat .link-btn:hover, .host-seat .link-btn:focus-visible { color: #fff; }
+
+/* ------------------------------------------------------------ para nerds */
+
+.nerds-btn {
+  position: absolute; left: 16px; bottom: 16px;
+  display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+  background: var(--panel); border: 0; color: var(--muted);
+  font-family: var(--pixel); font-size: 12px; text-transform: uppercase; cursor: pointer;
+}
+.nerds-btn:hover, .nerds-btn:focus-visible { color: #fff; outline: 3px solid var(--hilite); outline-offset: -3px; }
+.cloud-icon rect { fill: currentColor; }
+
+.overlay.nerds { background: rgba(10, 12, 12, 0.92); }
+.nerds-card { text-align: left; width: min(1100px, 100%); max-height: 100%; overflow: auto; background: var(--charcoal); padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; animation: slide-in 260ms steps(4); }
+.nerds-head { display: flex; justify-content: space-between; align-items: center; }
+.nerds-head .pixel-title { margin: 0; }
+
+.arch { width: 100%; height: auto; display: block; }
+.arch text { font-family: var(--text); fill: var(--muted); font-size: 18px; }
+.arch .region { fill: rgba(255, 207, 74, 0.04); stroke: var(--gold); stroke-width: 2; stroke-dasharray: 8 6; }
+.arch .region-label { fill: var(--gold); font-family: var(--pixel); font-size: 12px; text-transform: uppercase; }
+.arch .edge polyline { fill: none; stroke: #8fa39c; stroke-width: 4; }
+.arch .edge.back polyline { stroke-dasharray: 6 6; stroke-width: 3; }
+.arch .edge text { font-size: 16px; }
+.arch .node { cursor: pointer; outline: none; }
+.arch .node .box { fill: #2a3330; stroke: #4c5a55; stroke-width: 3; }
+.arch .node .sprite { image-rendering: pixelated; }
+.arch .node .node-label { fill: #fff; text-anchor: middle; font-size: 18px; }
+.arch .node:hover .box, .arch .node:focus-visible .box { stroke: var(--hilite); }
+.arch .node.on .box { stroke: var(--gold); stroke-width: 4; }
+
+.nerds-detail { min-height: 7.5em; }
+.nerds-detail h3 { margin: 0 0 6px; font-family: var(--pixel); font-weight: 400; font-size: 18px; color: #fff; text-transform: uppercase; }
+.nerds-detail p { margin: 0 0 8px; font-size: var(--t1h); line-height: 1.15; }
+.nerds-detail .tf { display: flex; flex-wrap: wrap; gap: 6px; }
+.nerds-detail code { font-size: 14px; padding: 2px 6px; background: rgba(0, 0, 0, 0.35); color: var(--gold); }
+.nerds-foot { font-size: var(--t1); color: var(--muted); }
+.nerds-foot a { color: #fff; }
