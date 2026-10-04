@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
   Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow,
@@ -29,8 +29,41 @@ export default function HostPage() {
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
   const revealing = !!reveal && serverNow - reveal.closedAt <= REVEAL_MS;
-  const forget = useCallback(() => tokenStore.clear(code, "host"), [code]);
+  const forget = useCallback(() => {
+    tokenStore.clear(code, "host");
+    tokenStore.clear(code, "player");
+  }, [code]);
   const opening = useOpening(state?.view);
+
+  // ---- "Jugar yo también": when there's no TV, the laptop is the board AND a player.
+  // A second connection with a player seat, exactly like a phone; the server can't tell the difference.
+  const [wantsSeat, setWantsSeat] = useState(false);
+  useEffect(() => {
+    if (tokenStore.get(code, "player")) setWantsSeat(true); // reload: take the seat back
+  }, [code]);
+  const seat = useRoom(code, "player", { enabled: wantsSeat });
+  const [seatName, setSeatName] = useState("");
+  const [pendingJoin, setPendingJoin] = useState<string | null>(null);
+  const me = seat.state?.you.playerId;
+  useEffect(() => {
+    if (!pendingJoin || seat.status !== "open" || !seat.state || me) return;
+    seat.send({ t: "join", name: pendingJoin });
+    setPendingJoin(null);
+  }, [pendingJoin, seat, me]);
+  const takeSeat = (e: FormEvent) => {
+    e.preventDefault();
+    if (!seatName.trim()) return;
+    if (seat.status === "open" && seat.state) seat.send({ t: "join", name: seatName });
+    else {
+      setPendingJoin(seatName);
+      setWantsSeat(true);
+    }
+  };
+  const leaveSeat = () => {
+    seat.send({ t: "leave" });
+    tokenStore.clear(code, "player");
+    setWantsSeat(false);
+  };
 
   if (missingConfig) return <Message text="Falta NEXT_PUBLIC_WS_URL." />;
   if (status === "not-found") return <Message text={`La sala ${code} no existe o ya expiró.`} />;
@@ -41,6 +74,29 @@ export default function HostPage() {
   const playing = view.phase.kind === "picking" || view.phase.kind === "answering";
   const joinUrl = typeof window !== "undefined" ? `${window.location.host}/play/${code}` : "";
   const joinLink = typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : "";
+  const myName = me ? view.players.find((p) => p.id === me)?.name : undefined;
+  const myTurn = !!me && view.phase.kind === "picking" && view.players[view.turnOwner]?.id === me;
+  const myAnswer = !!me && view.phase.kind === "answering" && view.phase.answerer === me;
+  const seatControl = me ? (
+    <p className="host-seat">
+      Juegas desde aquí como <strong>{myName}</strong>
+      <button className="link-btn" onClick={leaveSeat}>Dejar de jugar</button>
+    </p>
+  ) : (
+    <form className="host-seat" onSubmit={takeSeat}>
+      <label htmlFor="host-seat-name">¿Juegas desde aquí?</label>
+      <input
+        id="host-seat-name"
+        value={seatName}
+        onChange={(e) => setSeatName(e.target.value)}
+        placeholder="Tu nombre"
+        maxLength={20}
+        autoComplete="nickname"
+      />
+      <button className="btn small" type="submit" disabled={!seatName.trim() || pendingJoin !== null}>Unirme</button>
+      {seat.error && <span className="seat-error">{describeError(seat.error)}</span>}
+    </form>
+  );
 
   return (
     <div className="stage host-screen" data-stage={stageOf(view.phase)}>
@@ -82,6 +138,7 @@ export default function HostPage() {
                     onClose={closeRules}
                     onUnlock={(attempt) => send({ t: "unlock", code: attempt })}
                     unlocked={unlocked}
+                    seat={seatControl}
                   />
                 </>
               ) : (
@@ -102,7 +159,7 @@ export default function HostPage() {
                   {isHost && (
                     <div className="after-actions">
                       {view.players.length > 0 ? (
-                        <button className="btn big" onClick={() => send({ t: "start" })}>Jugar</button>
+                        <button className="btn big" onClick={() => send({ t: "start" })}>{me ? "Jugar" : "Transmitir"}</button>
                       ) : (
                         <p className="waiting-players">Esperando jugadores…</p>
                       )}
@@ -118,14 +175,20 @@ export default function HostPage() {
         {(view.phase.kind === "picking" || view.phase.kind === "answering") && (
           <div className="game">
             <div className="main-col">
+              {myTurn && !opening.active && <p className="banner mine">¡Tu turno, {myName}! Elige una carta</p>}
               {view.phase.kind === "answering" ? (
-                <QuestionPanel view={view} secondsLeft={secondsLeft} canAnswer={false} />
+                <QuestionPanel
+                  view={view}
+                  secondsLeft={secondsLeft}
+                  canAnswer={myAnswer}
+                  onAnswer={(choice) => seat.send({ t: "answer", choice })}
+                />
               ) : (
-                <Board view={view} />
+                <Board view={view} {...(myTurn && { onPick: (cardId: string) => seat.send({ t: "pick", cardId }) })} />
               )}
             </div>
             <aside>
-              <Scoreboard view={view} connected={connected} />
+              <Scoreboard view={view} connected={connected} {...(me && { me })} />
             </aside>
           </div>
         )}
