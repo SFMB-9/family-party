@@ -178,8 +178,11 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
     });
   }
 
+  // Turn order for this round. Its own random stream, so the deal above stays the same for a seed.
+  const players = rules.order === "random" ? shuffle(state.players, createRng(action.seed ^ 0x5eed0f)) : state.players;
+
   return done({
-    ...state, board, questions, phase: { kind: "picking" }, turnOwner: 0, seed: action.seed, left: [],
+    ...state, players, board, questions, phase: { kind: "picking" }, turnOwner: 0, seed: action.seed, left: [],
   });
 }
 

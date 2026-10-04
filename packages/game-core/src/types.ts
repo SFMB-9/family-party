@@ -76,6 +76,8 @@ export interface Rules {
   rows: "players" | number;
   /** No category columns: cards shuffled across the grid, category shown only when opened. */
   mixed: boolean;
+  /** Turn order each round: drawn at random when the game starts, or the order people joined. */
+  order: "random" | "join";
 }
 
 // ---- Game state ----

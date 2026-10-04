@@ -27,8 +27,10 @@ function ok(result: ReduceResult): GameState {
   return result.state;
 }
 
+/** Join order as turn order, so tests can say who plays first. Random order has its own tests. */
 function lobbyWith(...ids: string[]): GameState {
-  return ids.reduce((s, id) => ok(reduce(s, { type: "JOIN", player: player(id) })), initialState());
+  const start: GameState = { ...initialState(), rules: { ...DEFAULT_RULES, order: "join" } };
+  return ids.reduce((s, id) => ok(reduce(s, { type: "JOIN", player: player(id) })), start);
 }
 
 const bank = CATEGORIES.flatMap((c) => Array.from({ length: 4 }, () => q(c)));
@@ -102,6 +104,37 @@ describe("JOIN", () => {
 });
 
 // ---- START ----
+describe("turn order", () => {
+  const ids = (s: GameState) => s.players.map((p) => p.id);
+  const randomLobby = (...names: string[]) =>
+    names.reduce((s, id) => ok(reduce(s, { type: "JOIN", player: player(id) })), initialState());
+  const names = ["ana", "beto", "caro", "dani"];   // the test bank fills 4 rows
+
+  it("is drawn at random by default, a different order for different seeds", () => {
+    const orders = new Set([1, 2, 3, 4, 5, 6].map((seed) => ids(ok(reduce(randomLobby(...names), { type: "START", questions: bank, seed }))).join()));
+    expect(orders.size).toBeGreaterThan(1);
+  });
+
+  it("keeps everyone, starts with whoever is first, and is the same for the same seed", () => {
+    const a = ok(reduce(randomLobby(...names), { type: "START", questions: bank, seed: 7 }));
+    const b = ok(reduce(randomLobby(...names), { type: "START", questions: bank, seed: 7 }));
+    expect([...ids(a)].sort()).toEqual(names);
+    expect(ids(a)).toEqual(ids(b));
+    expect(a.turnOwner).toBe(0);
+  });
+
+  it("doesn't change the deal: same seed, same board, whichever order", () => {
+    const random = ok(reduce(randomLobby(...names), { type: "START", questions: bank, seed: 3 }));
+    const joined = ok(reduce(lobbyWith(...names), { type: "START", questions: bank, seed: 3 }));
+    expect(random.board).toEqual(joined.board);
+  });
+
+  it("can stay in join order (house rule)", () => {
+    const s = ok(reduce(lobbyWith(...names), { type: "START", questions: bank, seed: 9 }));
+    expect(ids(s)).toEqual(names);
+  });
+});
+
 describe("START", () => {
   const start = (s: GameState, questions = bank, seed = 1) =>
     reduce(s, { type: "START", questions, seed });
@@ -682,12 +715,12 @@ describe("rules", () => {
 
   describe("SET_RULES", () => {
     it("merges a partial change into the defaults", () => {
-      const s = ok(reduce(lobbyWith("ana"), { type: "SET_RULES", rules: { steals: "full", columns: 3 } }));
+      const s = ok(reduce(initialState(), { type: "SET_RULES", rules: { steals: "full", columns: 3 } }));
       expect(s.rules).toEqual({ ...DEFAULT_RULES, steals: "full", columns: 3 });
     });
 
     it.each([
-      { columns: 6 }, { columns: 2.5 }, { rows: 0 }, { rows: 9 }, { timer: 17 }, { wrongAnswer: "maybe" },
+      { columns: 6 }, { columns: 2.5 }, { rows: 0 }, { rows: 9 }, { timer: 17 }, { wrongAnswer: "maybe" }, { order: "alphabetical" },
       { mixed: "yes" }, { unknownOption: true }, { steals: "half", columns: 99 },   // all or nothing
     ])("rejects %j", (rules) => {
       expect(reduce(lobbyWith("ana"), { type: "SET_RULES", rules })).toEqual({ ok: false, error: "INVALID_RULES" });

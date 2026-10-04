@@ -3,6 +3,8 @@ import type { Rules } from "./types";
 /**
  * House rules the host picks in the lobby. The defaults are the 2023 game:
  * wrong answers cost the stake, steals halve it, every card in its category column.
+ * One change since then: who starts is drawn at random each round (it used to be join order,
+ * so whoever arrived last always played last).
  */
 export const DEFAULT_RULES: Rules = {
   wrongAnswer: "lose",
@@ -12,6 +14,7 @@ export const DEFAULT_RULES: Rules = {
   columns: 5,
   rows: "players",
   mixed: false,
+  order: "random",
 };
 
 export const RULE_LIMITS = {
@@ -61,6 +64,10 @@ export function applyRules(current: Rules, patch: Partial<Record<keyof Rules, un
       case "mixed":
         if (typeof value !== "boolean") return null;
         next.mixed = value;
+        break;
+      case "order":
+        if (!oneOf(value, ["random", "join"] as const)) return null;
+        next.order = value;
         break;
       default:
         return null; // unknown option
