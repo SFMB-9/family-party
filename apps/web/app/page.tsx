@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { isRoomCode, type ServerMessage } from "@family-party/protocol";
 import { describeError } from "./lib/errors";
 import { tokenStore } from "./lib/storage";
+import { NerdsButton } from "./nerds";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
@@ -82,6 +83,7 @@ export default function Home() {
         </button>
       </section>
     </main>
+    <NerdsButton />
     </div>
   );
 }
