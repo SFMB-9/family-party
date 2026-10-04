@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, RulesSummary, Scoreboard, money, nameOf, stageOf, useServerNow,
+  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Roulette, RulesSummary, Scoreboard, money, nameOf, stageOf, useOpening, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -24,6 +24,7 @@ export default function PlayPage() {
   const serverNow = useServerNow(clockOffset, !!reveal);
   const router = useRouter();
   const forget = useCallback(() => tokenStore.clear(code, "player"), [code]);
+  const opening = useOpening(state?.view);
 
   if (missingConfig) return <Message text="Falta NEXT_PUBLIC_WS_URL." />;
   if (status === "not-found") return <Message text={`La sala ${code} no existe o ya expiró.`} />;
@@ -144,6 +145,7 @@ export default function PlayPage() {
         {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
+      {opening.active && <Roulette view={view} onDone={opening.finish} avatarSize={48} />}
       {revealing && <Reveal view={view} serverNow={serverNow} me={me} onClose={() => setDismissed(reveal!.closedAt)} />}
     </div>
   );

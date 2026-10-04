@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, EncoreList, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
-  RulesSummary, Scoreboard, stageOf, useServerNow,
+  Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 
@@ -30,6 +30,7 @@ export default function HostPage() {
   const serverNow = useServerNow(clockOffset, !!reveal);
   const revealing = !!reveal && serverNow - reveal.closedAt <= REVEAL_MS;
   const forget = useCallback(() => tokenStore.clear(code, "host"), [code]);
+  const opening = useOpening(state?.view);
 
   if (missingConfig) return <Message text="Falta NEXT_PUBLIC_WS_URL." />;
   if (status === "not-found") return <Message text={`La sala ${code} no existe o ya expiró.`} />;
@@ -148,7 +149,8 @@ export default function HostPage() {
       </main>
 
       <Reveal view={view} serverNow={serverNow} />
-      <Announcement view={view} holdWhile={revealing} />
+      {opening.active && <Roulette view={view} onDone={opening.finish} />}
+      <Announcement view={view} holdWhile={revealing || opening.active} skipFirstTurn={opening.ran} />
     </div>
   );
 }

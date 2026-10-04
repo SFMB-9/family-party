@@ -177,6 +177,7 @@ describe("playing", () => {
     const { code } = await createRoom();
     const ana = await joinAs("ana", code, "Ana");
     const beto = await joinAs("beto", code, "Beto");
+    await send("host", { t: "rules", rules: { order: "join" } });   // Ana plays first
     await send("host", { t: "start" });
     return { code, ana, beto };
   }
@@ -453,6 +454,7 @@ describe("leaving", () => {
     const { code } = await createRoom();
     const ana = await joinAs("ana", code, "Ana");
     const beto = await joinAs("beto", code, "Beto");
+    await send("host", { t: "rules", rules: { order: "join" } });
     await send("host", { t: "start" });
     await send("ana", { t: "leave" });     // it was Ana's turn
 

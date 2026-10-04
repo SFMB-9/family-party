@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { describeError as describeErrorText } from "./lib/errors";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { PackInfo } from "@family-party/protocol";
 import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type Pick, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
 
@@ -277,14 +277,15 @@ export function Reveal({ view, serverNow, onClose, me }: {
  * The big between-turn moments from the 2023 game ("TURNO DE ANDREA", "SALVA, PUEDES
  * ROBAR ESTA PREGUNTA"), minus the confirm button: they play for 2s and get out of the way.
  */
-export function Announcement({ view, holdWhile }: { view: PublicState; holdWhile: boolean }) {
+export function Announcement({ view, holdWhile, skipFirstTurn = false }: { view: PublicState; holdWhile: boolean; skipFirstTurn?: boolean }) {
   const phase = view.phase;
   const owner = view.players[view.turnOwner];
   let key: string | null = null;
   let content: { title: string; subtitle?: string; playerId: string; name: string } | null = null;
 
-  if (phase.kind === "picking" && owner) {
-    key = `turn-${view.board.filter((c) => c.played).length}`;
+  const playedCount = view.board.filter((c) => c.played).length;
+  if (phase.kind === "picking" && owner && !(skipFirstTurn && playedCount === 0)) {
+    key = `turn-${playedCount}`;
     content = { title: `Turno de ${owner.name}`, subtitle: money(view.scores[owner.id] ?? 0), playerId: owner.id, name: owner.name };
   } else if (phase.kind === "answering" && phase.tried.length > 0) {
     key = `steal-${phase.cardId}-${phase.tried.length}`;
@@ -318,6 +319,81 @@ export function Announcement({ view, holdWhile }: { view: PublicState; holdWhile
           <p className="announce-title">{content.title}</p>
           {content.subtitle && <p className="announce-sub">{content.subtitle}</p>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- who starts
+
+/**
+ * A new game with random turn order opens with a roulette: everyone's avatar, a highlight
+ * hopping between them, landing on whoever the server drew first. Returns null otherwise.
+ * The key changes every deal, so a rematch spins again; a page reload mid-first-turn replays it.
+ */
+export function useOpening(view: PublicState | undefined) {
+  const key =
+    view &&
+    view.phase.kind === "picking" &&
+    view.rules.order === "random" &&
+    view.players.length > 1 &&
+    view.board.length > 0 &&
+    view.board.every((c) => !c.played)
+      ? view.board.map((c) => c.questionId).join("|")
+      : null;
+  const [doneKey, setDoneKey] = useState<string | null>(null);
+  return { active: key !== null && key !== doneKey, ran: key !== null, finish: () => setDoneKey(key) };
+}
+
+const ROULETTE_HOLD_MS = 1_600;
+
+export function Roulette({ view, onDone, avatarSize = 72 }: { view: PublicState; onDone: () => void; avatarSize?: number }) {
+  // Alphabetical, so the ring doesn't give away the order before it lands.
+  const ring = useMemo(() => [...view.players].sort((a, b) => a.name.localeCompare(b.name)), [view.players]);
+  const first = view.players[view.turnOwner];
+  const target = Math.max(0, ring.findIndex((p) => p.id === first?.id));
+  const [step, setStep] = useState(0);
+  const [landed, setLanded] = useState(false);
+
+  useEffect(() => {
+    const n = ring.length;
+    const still = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const total = still ? 0 : (n <= 4 ? 3 : 2) * n + target; // a few laps, then the target
+    let i = 0;
+    let t: ReturnType<typeof setTimeout>;
+    const land = () => {
+      setStep(target);
+      setLanded(true);
+      t = setTimeout(onDone, ROULETTE_HOLD_MS);
+    };
+    const hop = () => {
+      if (i >= total) return land();
+      i++;
+      setStep(i);
+      const p = i / total;
+      t = setTimeout(hop, 60 + 320 * p * p); // slows down like a wheel
+    };
+    t = setTimeout(total === 0 ? land : hop, 300);
+    return () => clearTimeout(t);
+    // Spins once per mount; the parent unmounts it when the opening is over.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const lit = ring.length ? step % ring.length : 0;
+  const order = view.players.filter((p) => !view.left.includes(p.id));
+  return (
+    <div className="overlay announce roulette" role="status" aria-live="polite">
+      <div className="roulette-card">
+        <p className="announce-title">{landed && first ? `¡Empieza ${first.name}!` : "¿Quién empieza?"}</p>
+        <ul className="roulette-ring">
+          {ring.map((p, i) => (
+            <li key={p.id} className={i === lit ? "lit" : ""}>
+              <Avatar id={p.id} name={p.name} size={avatarSize} />
+              <span>{p.name}</span>
+            </li>
+          ))}
+        </ul>
+        <p className={`roulette-order ${landed ? "" : "hidden"}`}>{order.map((p) => p.name).join(" → ")}</p>
       </div>
     </div>
   );
@@ -459,6 +535,10 @@ const RULE_OPTIONS = {
     { value: "players", label: "1 por jugador" },
     ...[2, 3, 4, 5, 6].map((n) => ({ value: n, label: String(n) })),
   ],
+  order: [
+    { value: "random", label: "Al azar" },
+    { value: "join", label: "Por llegada" },
+  ],
 } satisfies { [K in keyof Rules]: Option<Rules[K]>[] };
 
 const labelOf = <K extends keyof Rules>(key: K, value: Rules[K]) =>
@@ -533,6 +613,7 @@ export function RulesSummary({ rules, picks = [], onEdit }: {
   const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
 
   const rows: [string, string, boolean][] = [
+    ["Turnos", labelOf("order", rules.order), isChanged("order")],
     ["Respuesta incorrecta", labelOf("wrongAnswer", rules.wrongAnswer), isChanged("wrongAnswer")],
     ["Tiempo", labelOf("timer", rules.timer), isChanged("timer")],
     [
@@ -771,6 +852,7 @@ function RulesFields({ rules, players, onChange }: { rules: Rules; players: numb
   const uneven = players > 1 && cards % players !== 0;
   return (
     <>
+      <Choice label="Turnos" field="order" rules={rules} onChange={onChange} />
       <Choice label="Respuesta incorrecta" field="wrongAnswer" rules={rules} onChange={onChange} />
       <Choice label="Tiempo" field="timer" rules={rules} onChange={onChange} />
       <Choice label="Robos" field="steals" rules={rules} onChange={onChange} />

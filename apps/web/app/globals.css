@@ -434,6 +434,22 @@ input {
 
 /* ------------------------------------------------------------ overlays */
 
+/* Who starts: the highlight hops between avatars (steps, no easing: pixel feel).
+   Opaque, so the scoreboard and the phone's turn banner underneath don't give it away. */
+.overlay.roulette { background: rgba(10, 12, 12, 0.97); }
+.roulette-card { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 24px; max-width: 960px; text-align: center; animation: slide-in 260ms steps(4); }
+.roulette-ring { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+.roulette-ring li { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 96px; opacity: 0.4; }
+.roulette-ring li span:last-child { font-size: var(--t1); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roulette-ring li.lit { opacity: 1; transform: translateY(-8px); }
+.roulette-ring li.lit .avatar { outline: 4px solid var(--gold); outline-offset: 4px; }
+.roulette-order { margin: 0; color: var(--gold); font-size: var(--t1h); }
+.roulette-order.hidden { visibility: hidden; }
+@media (max-width: 600px) {
+  .roulette-ring { gap: 12px; }
+  .roulette-ring li { width: 64px; }
+}
+
 .overlay {
   position: fixed;
   inset: 0;
