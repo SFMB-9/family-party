@@ -700,7 +700,7 @@ const neededPerCategory = (rules: Rules, players: number) => rowsFor(rules, Math
  * server (or the phones) until Guardar; the panel closes only once the saved values come
  * back in a snapshot, so a rejected save never looks like it worked.
  */
-export function OptionsPanel({ rules, picks, catalog, players, error, onSave, onClose, onUnlock, unlocked }: {
+export function OptionsPanel({ rules, picks, catalog, players, error, onSave, onClose, onUnlock, unlocked, seat }: {
   rules: Rules;
   picks: Pick[];
   catalog: PackInfo[] | null;
@@ -711,6 +711,8 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
   unlocked: { id: string; name: string } | null;
   onSave: (next: Options, changed: { rules: boolean; picks: boolean }) => boolean;
   onClose: () => void;
+  /** "¿Juegas desde aquí?": acts right away, outside the draft (it's about this screen, not the rules). */
+  seat?: ReactNode;
 }) {
   const [tab, setTab] = useState<"rules" | "questions">("questions"); // what to play first, then how
   const [draft, setDraft] = useState<Options>({ rules, picks });
@@ -772,7 +774,10 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
       </div>
 
       {tab === "rules" ? (
-        <RulesFields rules={draft.rules} players={players} onChange={editRules} />
+        <>
+          {seat && <div className="seat-section">{seat}</div>}
+          <RulesFields rules={draft.rules} players={players} onChange={editRules} />
+        </>
       ) : (
         <>
           <PicksFields catalog={catalog} picks={draft.picks} rules={draft.rules} players={players} onChange={editPicks} />

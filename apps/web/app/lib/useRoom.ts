@@ -20,8 +20,9 @@ type Kind = "host" | "player";
 /**
  * One room connection: opens wss://…?room=CODE, says hello with the saved token,
  * and keeps the latest snapshot. Reconnects with backoff; the token restores the same seat.
+ * `enabled: false` keeps it closed (the host's optional player seat until they ask for one).
  */
-export function useRoom(code: string, kind: Kind) {
+export function useRoom(code: string, kind: Kind, { enabled = true }: { enabled?: boolean } = {}) {
   const [status, setStatus] = useState<Status>("connecting");
   const [state, setState] = useState<RoomState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,11 @@ export function useRoom(code: string, kind: Kind) {
   const closedRef = useRef(false); // room closed: no point keeping the heartbeat
 
   useEffect(() => {
-    if (!WS_URL) return;
+    if (!WS_URL || !enabled) {
+      setState(null);
+      setStatus("connecting");
+      return;
+    }
     let stopped = false;
     let retry = 0;
     let refusedInARow = 0;
@@ -161,7 +166,7 @@ export function useRoom(code: string, kind: Kind) {
       window.removeEventListener("online", onOnline);
       socketRef.current?.close();
     };
-  }, [code, kind]);
+  }, [code, kind, enabled]);
 
   const send = useCallback((msg: ClientMessage) => {
     const ws = socketRef.current;

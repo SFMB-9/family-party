@@ -535,3 +535,12 @@ input {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition: none !important; }
 }
+
+/* Host plays from the laptop: top of the Reglas tab, acts right away (not part of the draft). */
+.seat-section { padding-bottom: 14px; margin-bottom: 6px; border-bottom: 2px solid rgba(255, 255, 255, 0.12); }
+.host-seat { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 10px; margin: 0; font-size: var(--t1); color: var(--muted); }
+.host-seat strong { color: #fff; font-weight: 400; }
+.host-seat input { width: 11em; padding: 6px 10px; font: inherit; font-size: var(--t1); background: rgba(0, 0, 0, 0.25); color: #fff; border: 2px solid rgba(255, 255, 255, 0.2); }
+.host-seat .seat-error { flex-basis: 100%; color: #ff8a7a; }
+.host-seat .link-btn { padding: 0; font: inherit; color: var(--muted); }
+.host-seat .link-btn:hover, .host-seat .link-btn:focus-visible { color: #fff; }
