@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * "Para nerds": the cloud architecture behind the game, as a clickable pixel diagram.
+ * "For Nerds": the cloud architecture behind the game, as a clickable pixel diagram.
  * Sprites live in /public/sprites/arch/<id>.png (24×24, drawn at 2×). Swap the PNGs to restyle;
  * the layout, edges and copy are all here.
  */
@@ -95,6 +95,9 @@ const EDGES: { points: [number, number][]; label: string; lx: number; ly: number
   { points: [[534, 560], [696, 560]], label: "plan · apply", lx: 568, ly: 550 },
 ];
 
+/** Unlocks the "Behind the scenes" pack (in the private bucket like any other, but meant to be found). */
+const CHALLENGE_CODE = "TERRAFORMAPPLY";
+
 const BOX_W = 128;
 const BOX_H = 92;
 
@@ -102,9 +105,9 @@ export function NerdsButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="nerds-btn" onClick={() => setOpen(true)} title="Cómo está hecho" aria-haspopup="dialog">
+      <button className="nerds-btn" onClick={() => setOpen(true)} title="How it's built" aria-haspopup="dialog">
         <CloudIcon />
-        <span>Para nerds</span>
+        <span>For Nerds</span>
       </button>
       {open && <NerdsPanel onClose={() => setOpen(false)} />}
     </>
@@ -126,7 +129,7 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
       <div className="nerds-card" onClick={(e) => e.stopPropagation()}>
         <header className="nerds-head">
           <p className="pixel-title">How it&apos;s built</p>
-          <button className="btn small" onClick={onClose}>Cerrar</button>
+          <button className="btn small" onClick={onClose}>Close</button>
         </header>
 
         <div className="arch-wrap">
@@ -171,6 +174,14 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
             </p>
           )}
         </section>
+
+        <aside className="nerds-challenge">
+          <span className="pixel-title small">Think you got all that?</span>
+          <span>
+            Create a room, open <b>Opciones → Preguntas</b> (Options → Questions) and enter <code>{CHALLENGE_CODE}</code> to play a pack of questions about
+            this project. The code is public on purpose: unlocking it is the private-pack flow above, end to end.
+          </span>
+        </aside>
 
         <footer className="nerds-foot">
           Terraform, CI/CD and game code are public:{" "}
