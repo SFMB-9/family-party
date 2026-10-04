@@ -143,7 +143,10 @@ export function Board({ view, onPick }: { view: PublicState; onPick?: (cardId: s
   const openCard = view.phase.kind === "answering" ? view.phase.cardId : null;
   const cols = columns(view.board, view.rules.mixed);
   return (
-    <div className={`board ${view.rules.mixed ? "mixed" : ""}`} style={{ ["--cols" as string]: cols.length }}>
+    <div
+      className={`board ${view.rules.mixed ? "mixed" : ""}`}
+      style={{ ["--cols" as string]: cols.length, ["--rows" as string]: Math.max(1, ...cols.map(([, , cards]) => cards.length)) }}
+    >
       {cols.map(([column, category, cards]) => (
         <div key={column} className="column">
           {category !== null && <div className="category">{category}</div>}
@@ -443,17 +446,42 @@ export function Podium({ view, children }: { view: PublicState; children?: React
   );
 }
 
-/** Host podium: who asked for another round, as avatars. */
-export function EncoreList({ view, connected }: { view: PublicState; connected: PlayerId[] }) {
-  const here = view.players.filter((p) => connected.includes(p.id));
-  const wanting = view.players.filter((p) => view.encore.includes(p.id));
-  if (wanting.length === 0) return <p className="hint">Los jugadores pueden pedir otra ronda desde su celular.</p>;
+/**
+ * Host podium, top to bottom: who's still here and who wants another round, then the two actions
+ * side by side, then one line on what "Otra ronda" does. Warns when nobody is left to play.
+ */
+export function AfterGame({ view, connected, onRematch, onClose }: {
+  view: PublicState; connected: PlayerId[]; onRematch: () => void; onClose: () => void;
+}) {
+  const inGame = view.players.filter((p) => !view.left.includes(p.id));
+  const here = inGame.filter((p) => connected.includes(p.id));
+  const wanting = here.filter((p) => view.encore.includes(p.id)); // someone who asked and then left doesn't count
   return (
-    <p className="encore">
-      <span className="pixel-title small">Quieren otra</span>
-      {wanting.map((p) => <Avatar key={p.id} id={p.id} name={p.name} size={36} />)}
-      <span className="count">{wanting.length}/{here.length}</span>
-    </p>
+    <div className="after-game">
+      {here.length === 0 ? (
+        <p className="presence warn">La sala está vacía</p>
+      ) : (
+        <p className="presence">
+          {here.length === inGame.length ? (inGame.length === 1 ? "Sigue conectado" : "Siguen todos conectados") : `${here.length} de ${inGame.length} siguen conectados`}
+        </p>
+      )}
+      {wanting.length > 0 && here.length > 0 && (
+        <p className="encore">
+          <span className="pixel-title small">Quieren otra</span>
+          {wanting.map((p) => <Avatar key={p.id} id={p.id} name={p.name} size={36} />)}
+          <span className="count">{wanting.length}/{here.length}</span>
+        </p>
+      )}
+      <div className="after-actions">
+        <button className="btn big" onClick={onRematch}>Otra ronda</button>
+        <ConfirmButton label="Cerrar sala" question="¿Cerrar la sala?" onConfirm={onClose} />
+      </div>
+      <p className="hint">
+        {here.length === 0
+          ? "Otra ronda abre la sala vacía para que se unan de nuevo."
+          : "Misma sala, preguntas nuevas. Quien salió no entra; pueden unirse más."}
+      </p>
+    </div>
   );
 }
 
@@ -603,13 +631,16 @@ function CogIcon() {
  * "Reglas de esta partida" as a booklet: closed by default so the lobby stays simple,
  * but it says when the host changed something, and changed rules are gold inside.
  */
-export function RulesSummary({ rules, picks = [], onEdit }: {
+export function RulesSummary({ rules, picks = [], onEdit, catalog }: {
   rules: Rules; picks?: Pick[];
   /** Host lobby: an "Editar" button next to the badge opens the options. */
   onEdit?: () => void;
+  /** Host only (phones don't load it): lets the badge name a private pack played on its own. */
+  catalog?: PackInfo[] | null;
 }) {
   const [open, setOpen] = useState(false);
   const changed = RULE_KEYS.filter((k) => rules[k] !== DEFAULT_RULES[k]);
+  const label = badgeLabel(rules, picks, changed.length, catalog);
   const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
 
   const rows: [string, string, boolean][] = [
@@ -650,7 +681,7 @@ export function RulesSummary({ rules, picks = [], onEdit }: {
       <div className="corner-actions">
         <button className="booklet-toggle" aria-expanded={open} aria-controls="rules-popover" onClick={() => setOpen((o) => !o)}>
           <BookletIcon />
-          <span className="label">{changed.length === 0 ? "Reglas clásicas" : "Reglas de la casa"}</span>
+          <span className="label">{label}</span>
           {changed.length > 0 && <span className="changes">{changed.length}</span>}
         </button>
         {onEdit && (
@@ -661,6 +692,21 @@ export function RulesSummary({ rules, picks = [], onEdit }: {
       </div>
     </aside>
   );
+}
+
+/**
+ * The badge's name for this game:
+ * - one private pack, all of its categories and nothing else → the pack's own name ("Milanés Party");
+ * - categories from more than one pack, or changed rules → "Reglas personalizadas";
+ * - otherwise "Reglas clásicas".
+ */
+function badgeLabel(rules: Rules, picks: Pick[], changedRules: number, catalog?: PackInfo[] | null): string {
+  const packs = [...new Set(picks.map((p) => p.pack))];
+  if (packs.length === 1 && catalog) {
+    const pack = catalog.find((p) => p.id === packs[0]);
+    if (pack?.private && pack.categories.every((c) => picks.some((p) => p.category === c.name))) return pack.name;
+  }
+  return packs.length > 1 || changedRules > 0 ? "Reglas personalizadas" : "Reglas clásicas";
 }
 
 /** Segmented choice: the selected option is the light button, the rest stay quiet. */
