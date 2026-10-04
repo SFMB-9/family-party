@@ -7,6 +7,9 @@ import {
   RulesSummary, Scoreboard, stageOf, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
+
+/** Shown right under the code field instead, so the banner would only repeat it. */
+const UNLOCK_ERRORS = new Set(["BAD_CODE", "TOO_MANY_ATTEMPTS"]);
 import { useCountdown } from "../../lib/useCountdown";
 import { tokenStore } from "../../lib/storage";
 import { useRoom } from "../../lib/useRoom";
@@ -14,7 +17,7 @@ import { useRoom } from "../../lib/useRoom";
 /** The shared screen: TV in the living room, or a Discord screen share. */
 export default function HostPage() {
   const code = String(useParams<{ code: string }>().code).toUpperCase();
-  const { status, state, error, send, clockOffset, quality, latencyMs, catalog, missingConfig } = useRoom(code, "host");
+  const { status, state, error, send, clockOffset, quality, latencyMs, catalog, unlocked, missingConfig } = useRoom(code, "host");
   const inLobby = state?.view.phase.kind === "lobby";
   // The category picker needs pack names and sizes: ask once the lobby is open.
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function HostPage() {
         </header>
 
         {!isHost && <p className="notice">Estás viendo esta sala. Solo quien la creó puede iniciarla.</p>}
-        {error && <p className="notice error">{describeError(error)}</p>}
+        {error && !UNLOCK_ERRORS.has(error) && <p className="notice error">{describeError(error)}</p>}
 
         {view.phase.kind === "lobby" && (
           <section className="lobby">
@@ -75,6 +78,8 @@ export default function HostPage() {
                       (!changed.picks || send({ t: "picks", picks: next.picks }))
                     }
                     onClose={closeRules}
+                    onUnlock={(attempt) => send({ t: "unlock", code: attempt })}
+                    unlocked={unlocked}
                   />
                 </>
               ) : (

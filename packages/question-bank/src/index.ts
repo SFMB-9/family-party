@@ -30,6 +30,11 @@ export function catalog(packs: Pack[] = PACKS): PackInfo[] {
   return catalogOf(packs);
 }
 
+/** Public packs, then any extra (private) packs unlocked in a room, marked as such. */
+export function catalogWith(extra: Pack[] = []): PackInfo[] {
+  return [...catalogOf(PACKS), ...catalogOf(extra).map((p) => ({ ...p, private: true }))];
+}
+
 /** A new room starts with every public category picked. */
 export function defaultPicks(packs: Pack[] = PACKS): Pick[] {
   return allPicksOf(packs);

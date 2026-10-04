@@ -13,3 +13,7 @@ out.json
 next-env.d.ts
 *.tsbuildinfo
 !.env.example
+
+# Private question packs never go in this public repo (they live in the packs bucket).
+*.locked.json
+private-packs/

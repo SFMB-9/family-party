@@ -6,6 +6,7 @@ describe("parseClientMessage", () => {
     expect(parseClientMessage('{"t":"hello"}')).toEqual({ t: "hello" });
     expect(parseClientMessage('{"t":"end"}')).toEqual({ t: "end" });
     expect(parseClientMessage('{"t":"ping"}')).toEqual({ t: "ping" });
+    expect(parseClientMessage('{"t":"unlock","code":"tamales de la abuela"}')).toEqual({ t: "unlock", code: "tamales de la abuela" });
     expect(parseClientMessage('{"t":"picks","picks":[{"pack":"clasico","category":"Historia","x":1}]}'))
       .toEqual({ t: "picks", picks: [{ pack: "clasico", category: "Historia" }] });
     expect(parseClientMessage('{"t":"rematch"}')).toEqual({ t: "rematch" });
@@ -37,6 +38,8 @@ describe("parseClientMessage", () => {
     '{"t":"hello","token":42}',
     '{"t":"create","packs":"clasico"}',
     '{"t":"rules"}',
+    '{"t":"unlock","code":"   "}',
+    `{"t":"unlock","code":"${"x".repeat(101)}"}`,
     '{"t":"picks","picks":"Historia"}',
     '{"t":"picks","picks":[{"pack":"clasico"}]}',
     '{"t":"rules","rules":[1]}',

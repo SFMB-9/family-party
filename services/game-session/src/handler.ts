@@ -4,10 +4,12 @@
  */
 import { createHash, randomBytes, randomInt } from "node:crypto";
 import type { APIGatewayProxyResultV2, APIGatewayProxyWebsocketEventV2 } from "aws-lambda";
-import { catalog, defaultPicks, picksExist, selectQuestions } from "@family-party/question-bank";
+import { PACKS, catalogWith, defaultPicks, picksExist, selectQuestions } from "@family-party/question-bank";
 import { createApp } from "./app";
 import { ApiGatewayPush, DynamoConnections, DynamoRooms } from "./dynamo";
 import { managementEndpoint } from "./endpoint";
+import { verifyCode } from "./packs";
+import { S3Packs, noPrivatePacks } from "./s3";
 
 const required = (name: string) => {
   const value = process.env[name];
@@ -17,6 +19,8 @@ const required = (name: string) => {
 
 const rooms = new DynamoRooms(required("ROOMS_TABLE"));
 const connections = new DynamoConnections(required("CONNECTIONS_TABLE"));
+// Created once per Lambda container, so its one-minute cache survives between requests.
+const privatePacks = process.env.PACKS_BUCKET ? new S3Packs(process.env.PACKS_BUCKET) : noPrivatePacks;
 
 /** $connect events carry the query string (?room=ABCD); the v2 type doesn't declare it. */
 type WebsocketEvent = APIGatewayProxyWebsocketEventV2 & { queryStringParameters?: Record<string, string | undefined> };
@@ -33,10 +37,12 @@ export async function handler(event: WebsocketEvent): Promise<APIGatewayProxyRes
     randomToken: () => randomBytes(24).toString("base64url"),
     // Only hashes are stored: a leaked table doesn't let anyone impersonate a player.
     hash: (token) => createHash("sha256").update(token).digest("hex"),
-    questions: (selection) => selectQuestions(selection),
-    catalog: () => catalog(),
+    questions: (selection, extra) => selectQuestions(selection, [...PACKS, ...extra]),
+    catalog: (extra) => catalogWith(extra),
     defaultPicks: () => defaultPicks(),
-    picksExist: (picks) => picksExist(picks),
+    picksExist: (picks, extra) => picksExist(picks, [...PACKS, ...extra]),
+    privatePacks,
+    verifyCode,
   });
 
   switch (routeKey) {

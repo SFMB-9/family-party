@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { describeError as describeErrorText } from "./lib/errors";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { PackInfo } from "@family-party/protocol";
 import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type Pick, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
 
@@ -616,12 +616,15 @@ const neededPerCategory = (rules: Rules, players: number) => rowsFor(rules, Math
  * server (or the phones) until Guardar; the panel closes only once the saved values come
  * back in a snapshot, so a rejected save never looks like it worked.
  */
-export function OptionsPanel({ rules, picks, catalog, players, error, onSave, onClose }: {
+export function OptionsPanel({ rules, picks, catalog, players, error, onSave, onClose, onUnlock, unlocked }: {
   rules: Rules;
   picks: Pick[];
   catalog: PackInfo[] | null;
   players: number;
   error: string | null;
+  /** Send a private pack's code; false if the message couldn't be sent. */
+  onUnlock: (code: string) => boolean;
+  unlocked: { id: string; name: string } | null;
   onSave: (next: Options, changed: { rules: boolean; picks: boolean }) => boolean;
   onClose: () => void;
 }) {
@@ -636,6 +639,19 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
     setSaving("idle");
     setDraft((d) => ({ ...d, picks: next }));
   };
+  // A code just opened a pack: the server already picked its categories; add them to the draft too.
+  const [knownPacks, setKnownPacks] = useState<string[]>(() => catalog?.map((p) => p.id) ?? []);
+  useEffect(() => {
+    if (!catalog) return;
+    const fresh = catalog.filter((p) => !knownPacks.includes(p.id));
+    if (fresh.length === 0) return;
+    setKnownPacks(catalog.map((p) => p.id));
+    if (knownPacks.length === 0) return; // first catalog load, nothing was "unlocked"
+    // From the catalog itself: it arrives before the room state that carries the server's new picks.
+    const added = allPicksOf(fresh);
+    setDraft((d) => ({ ...d, picks: [...d.picks, ...added.filter((p) => !d.picks.some((q) => pickKey(q) === pickKey(p)))] }));
+  }, [catalog, knownPacks]);
+
   const changed = { rules: !sameRules(draft.rules, rules), picks: !samePicks(draft.picks, picks) };
   const dirty = changed.rules || changed.picks;
 
@@ -674,7 +690,10 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
       {tab === "rules" ? (
         <RulesFields rules={draft.rules} players={players} onChange={editRules} />
       ) : (
-        <PicksFields catalog={catalog} picks={draft.picks} rules={draft.rules} players={players} onChange={editPicks} />
+        <>
+          <PicksFields catalog={catalog} picks={draft.picks} rules={draft.rules} players={players} onChange={editPicks} />
+          <UnlockField onUnlock={onUnlock} unlocked={unlocked} error={error} />
+        </>
       )}
 
       {saving === "failed" && (
@@ -696,6 +715,50 @@ export function OptionsPanel({ rules, picks, catalog, players, error, onSave, on
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * "¿Tienes un código?": unlocks a private pack for this room. The answer comes back as an
+ * `unlocked` message (its chips appear, already picked) or an error (wrong code, too many tries).
+ */
+function UnlockField({ onUnlock, unlocked, error }: {
+  onUnlock: (code: string) => boolean; unlocked: { id: string; name: string } | null; error: string | null;
+}) {
+  const [code, setCode] = useState("");
+  const [waiting, setWaiting] = useState(false);
+  const [lastUnlocked, setLastUnlocked] = useState(unlocked?.id ?? null);
+  const justUnlocked = unlocked && unlocked.id !== lastUnlocked ? unlocked : null;
+
+  useEffect(() => {
+    if (!waiting) return;
+    if (justUnlocked || error) setWaiting(false);
+    if (justUnlocked) setCode("");
+  }, [waiting, justUnlocked, error]);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!code.trim()) return;
+    setLastUnlocked(unlocked?.id ?? null);
+    setWaiting(onUnlock(code));
+  };
+
+  const failed = !waiting && (error === "BAD_CODE" || error === "TOO_MANY_ATTEMPTS");
+  return (
+    <form className="unlock" onSubmit={submit}>
+      <input
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        placeholder="CÓDIGO"
+        aria-label="Código de un paquete privado"
+        autoComplete="off"
+        spellCheck={false}
+        maxLength={100}
+      />
+      <button className="btn small" type="submit" disabled={!code.trim() || waiting}>{waiting ? "Probando…" : "Desbloquear"}</button>
+      {justUnlocked && <p className="hint ok-text" role="status">¡{justUnlocked.name} desbloqueado para esta sala!</p>}
+      {failed && <p className="hint warn" role="alert">{describeErrorText(error)}</p>}
+    </form>
   );
 }
 
@@ -774,7 +837,10 @@ function PicksFields({ catalog, picks, rules, players, onChange }: {
           return (
             <div key={pack.id} className="pack">
               <div className="pack-head">
-                <span className="pack-name">{pack.name}</span>
+                <span className="pack-name">
+                  {pack.name}
+                  {pack.private && <span className="private-tag">· privado</span>}
+                </span>
                 <button className="link-btn" onClick={() => setPack(pack.id, !allOn)}>{allOn ? "Quitar todas" : "Elegir todas"}</button>
               </div>
               <div className="chips">

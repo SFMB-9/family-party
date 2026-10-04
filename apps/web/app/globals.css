@@ -237,6 +237,13 @@ input {
 .rules-panel .chip { color: #fff; }
 .chip.off-limit { opacity: 0.5; border-style: dashed; cursor: not-allowed; }
 .chip.off-limit small { color: var(--gold); }
+.private-tag { margin-left: 8px; color: var(--gold); }
+.unlock { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Looks like a code you redeem: pixel font, uppercase, spaced out. The server forgives the form. */
+.unlock input { flex: 1; min-width: 12em; font-family: var(--pixel); font-size: 24px; letter-spacing: 0.12em; text-transform: uppercase; padding: 8px 12px; background: var(--charcoal); color: var(--gold); border: 2px solid #3d4a47; }
+.unlock input::placeholder { color: #5f6b67; }
+.unlock .hint { flex-basis: 100%; margin: 0; }
+.ok-text { color: #c8f59a; }
 
 .join { margin-top: 6vh; }
 .join input { font-size: var(--t1h); }
