@@ -7,7 +7,6 @@ import {
   Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow,
 } from "../../components";
 import { describeError } from "../../lib/errors";
-import { NerdsButton } from "../../nerds";
 
 /** Shown right under the code field instead, so the banner would only repeat it. */
 const UNLOCK_ERRORS = new Set(["BAD_CODE", "TOO_MANY_ATTEMPTS"]);
@@ -122,7 +121,6 @@ export default function HostPage() {
               <CopyText className="join-url" text={joinUrl} copy={joinLink} label="el enlace para unirse" />
               <p className="hint">o abre la página principal y escribe el código</p>
               <CopyText className="room-code huge" text={code} label="el código de la sala" />
-              <NerdsButton />
             </div>
             <div className="lobby-roster">
               {editingRules && isHost ? (

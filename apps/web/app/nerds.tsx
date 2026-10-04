@@ -129,6 +129,7 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
           <button className="btn small" onClick={onClose}>Cerrar</button>
         </header>
 
+        <div className="arch-wrap">
         <svg className="arch" viewBox="0 0 1000 620" shapeRendering="crispEdges" role="group" aria-label="Architecture diagram">
           {/* The AWS region, drawn as a dashed pixel frame */}
           <rect x="236" y="170" width="752" height="290" className="region" />
@@ -159,6 +160,7 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
             </g>
           ))}
         </svg>
+        </div>
 
         <section className="nerds-detail" aria-live="polite">
           <h3>{node.title}</h3>
