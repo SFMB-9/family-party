@@ -12,7 +12,7 @@ export const MAX_NAME_LENGTH = 20;
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES, picks: [],
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES, picks: [], left: [],
   };
 }
 
@@ -87,16 +87,43 @@ function sameName(a: string, b: string): boolean {
 }
 
 /**
- * Lobby only, for now. Leaving mid-game (and reconnecting after a phone
- * sleeps) gets designed together with the WebSocket layer.
+ * Lobby: the seat is freed (name and slot). Mid-game: the player drops out of the turn order
+ * but keeps their score for the podium. If it was their turn to pick, the turn moves on; if they
+ * were answering, it plays out like a timeout (no points lost, the steal goes to the next player).
  */
 function leave(state: GameState, action: ActionOf<"LEAVE">): ReduceResult {
-  if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
-  if (!state.players.some((p) => p.id === action.playerId)) return fail("UNKNOWN_PLAYER");
+  const { playerId } = action;
+  if (!state.players.some((p) => p.id === playerId)) return fail("UNKNOWN_PLAYER");
+  const phase = state.phase;
 
-  const players = state.players.filter((p) => p.id !== action.playerId);
-  const { [action.playerId]: _removed, ...scores } = state.scores;
-  return done({ ...state, players, scores });
+  switch (phase.kind) {
+    case "closed":
+      return fail("WRONG_PHASE");
+    case "lobby": {
+      const players = state.players.filter((p) => p.id !== playerId);
+      const { [playerId]: _removed, ...scores } = state.scores;
+      return done({ ...state, players, scores });
+    }
+    case "gameOver":
+      if (state.left.includes(playerId)) return done(state);
+      return done({ ...state, left: [...state.left, playerId], encore: state.encore.filter((id) => id !== playerId) });
+    case "picking":
+    case "answering": {
+      if (state.left.includes(playerId)) return done(state); // leaving twice is fine
+      let next: GameState = { ...state, left: [...state.left, playerId] };
+      if (state.players.every((p) => next.left.includes(p.id))) {
+        return done({ ...next, phase: { kind: "gameOver" }, reveal: null }); // nobody left to play
+      }
+      if (phase.kind === "picking" && state.players[state.turnOwner]?.id === playerId) {
+        next = { ...next, turnOwner: nextActive(next, state.turnOwner) };
+      }
+      if (phase.kind === "answering" && phase.answerer === playerId) {
+        const question = questionFor(next, phase.cardId);
+        next = missed(next, phase, question, action.at, [...phase.results, { playerId, choice: null, delta: 0 }]);
+      }
+      return done(next);
+    }
+  }
 }
 
 function start(state: GameState, action: ActionOf<"START">): ReduceResult {
@@ -152,7 +179,7 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
   }
 
   return done({
-    ...state, board, questions, phase: { kind: "picking" }, turnOwner: 0, seed: action.seed,
+    ...state, board, questions, phase: { kind: "picking" }, turnOwner: 0, seed: action.seed, left: [],
   });
 }
 
@@ -240,7 +267,7 @@ function missed(state: GameState, phase: Answering, question: Question, at: numb
   const { rules } = state;
   const tried = [...phase.tried, phase.answerer];
   const canSteal = rules.steals !== "off" && question.stealable;
-  const next = canSteal ? nextUntried(state.players.map((p) => p.id), phase.answerer, tried) : null;
+  const next = canSteal ? nextUntried(state.players.map((p) => p.id), phase.answerer, [...tried, ...state.left]) : null;
 
   if (next === null) return closeCard(state, phase.cardId, at, results);
 
@@ -288,7 +315,7 @@ function encore(state: GameState, action: ActionOf<"ENCORE">): ReduceResult {
 function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
   if (state.phase.kind !== "gameOver") return fail("WRONG_PHASE");
   const keep = new Set(action.keep);
-  const players = state.players.filter((p) => keep.has(p.id));
+  const players = state.players.filter((p) => keep.has(p.id) && !state.left.includes(p.id));
   const playedNow = state.board.filter((c) => c.played).map((c) => c.questionId);
 
   return done({
@@ -301,6 +328,7 @@ function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
     phase: { kind: "lobby" },
     reveal: null,
     encore: [],
+    left: [],
     played: [...new Set([...state.played, ...playedNow])],
   });
 }
@@ -336,9 +364,19 @@ function closeCard(state: GameState, cardId: string, at: number, results: Answer
     ...state,
     board,
     reveal: { cardId, questionId, results, closedAt: at },
-    turnOwner: (state.turnOwner + 1) % state.players.length,
+    turnOwner: nextActive(state, state.turnOwner),
     phase: allPlayed ? { kind: "gameOver" } : { kind: "picking" },
   };
+}
+
+/** The next seat after `from` that still plays (skips players who left). */
+function nextActive(state: GameState, from: number): number {
+  const n = state.players.length;
+  for (let step = 1; step <= n; step++) {
+    const i = (from + step) % n;
+    if (!state.left.includes(state.players[i]!.id)) return i;
+  }
+  return from;
 }
 
 /** Walk the circle forward from `fromId`; first player who hasn't tried yet, or null. */

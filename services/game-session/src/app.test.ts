@@ -415,6 +415,13 @@ describe("after the game", () => {
     expect(stateOf("beto-again").you).toEqual({ role: "viewer" });
   });
 
+  it("the host can close the room from the lobby too", async () => {
+    const { code } = await createRoom();
+    await joinAs("ana", code, "Ana");
+    await send("host", { t: "close" });
+    expect(stateOf("ana").view.phase).toEqual({ kind: "closed" });
+  });
+
   it("only the host closes the room, and everyone sees it closed", async () => {
     await onPodium();
     await send("beto", { t: "close" });
@@ -422,5 +429,43 @@ describe("after the game", () => {
     await send("host", { t: "close" });
     expect(stateOf("ana").view.phase).toEqual({ kind: "closed" });
     expect(stateOf("beto").view.phase).toEqual({ kind: "closed" });
+  });
+});
+
+describe("leaving", () => {
+  it("in the lobby frees the seat, and the phone becomes a viewer", async () => {
+    const { code } = await createRoom();
+    const ana = await joinAs("ana", code, "Ana");
+    await joinAs("beto", code, "Beto");
+    await send("ana", { t: "leave" });
+    expect(stateOf("host").view.players.map((p) => p.name)).toEqual(["Beto"]);
+    expect(stateOf("ana").you).toEqual({ role: "viewer" });
+
+    // The old token no longer seats them; the name is free again.
+    await app.connect("ana-again", code);
+    await send("ana-again", { t: "hello", token: ana.token });
+    expect(errorOf("ana-again")).toBe("BAD_TOKEN");
+    await send("ana-again", { t: "join", name: "Ana" });
+    expect(push.last("ana-again", "joined")).toBeDefined();
+  });
+
+  it("mid-game keeps the score but skips their turns", async () => {
+    const { code } = await createRoom();
+    const ana = await joinAs("ana", code, "Ana");
+    const beto = await joinAs("beto", code, "Beto");
+    await send("host", { t: "start" });
+    await send("ana", { t: "leave" });     // it was Ana's turn
+
+    const view = stateOf("host").view;
+    expect(view.left).toEqual([ana.playerId]);
+    expect(view.players[view.turnOwner]!.id).toBe(beto.playerId);
+    await send("ana", { t: "pick", cardId: view.board[0]!.id });
+    expect(errorOf("ana")).toBe("NOT_A_PLAYER");
+  });
+
+  it("only players can leave", async () => {
+    await createRoom();
+    await send("host", { t: "leave" });
+    expect(errorOf("host")).toBe("NOT_A_PLAYER");
   });
 });

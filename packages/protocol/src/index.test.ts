@@ -12,6 +12,7 @@ describe("parseClientMessage", () => {
     expect(parseClientMessage('{"t":"rematch"}')).toEqual({ t: "rematch" });
     expect(parseClientMessage('{"t":"close"}')).toEqual({ t: "close" });
     expect(parseClientMessage('{"t":"encore"}')).toEqual({ t: "encore" });
+    expect(parseClientMessage('{"t":"leave"}')).toEqual({ t: "leave" });
     expect(parseClientMessage('{"t":"rules","rules":{"steals":"off","columns":3,"mixed":true}}'))
       .toEqual({ t: "rules", rules: { steals: "off", columns: 3, mixed: true } });
     expect(parseClientMessage('{"t":"hello","token":"abc"}')).toEqual({ t: "hello", token: "abc" });

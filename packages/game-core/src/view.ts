@@ -54,6 +54,7 @@ export function publicView(state: GameState): PublicState {
     encore: state.encore,
     rules: state.rules,
     picks: state.picks,
+    left: state.left,
   };
 }
 

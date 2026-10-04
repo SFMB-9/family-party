@@ -246,6 +246,24 @@ export function createApp(deps: Deps) {
 
     if (msg.t === "unlock") return void (await unlock(conn, code, msg.code));
 
+    if (msg.t === "leave") {
+      if (conn.role !== "player" || !conn.playerId) return void (await sendError(connectionId, "NOT_A_PLAYER"));
+      const playerId = conn.playerId;
+      const result = await mutate(code, (room) => {
+        const next = applyAction(room, { type: "LEAVE", playerId, at: deps.now() });
+        if (!next.ok) return next;
+        // The seat's token goes too: coming back means joining fresh (or watching, mid-game).
+        const playerTokens = Object.fromEntries(Object.entries(room.playerTokens).filter(([, id]) => id !== playerId));
+        return { ok: true, room: { ...next.room, playerTokens } };
+      });
+      if (!result.ok) return void (await sendError(connectionId, result.error));
+      const viewer: Connection = { ...conn, role: "viewer" };
+      delete viewer.playerId;
+      await connections.put(viewer);
+      await broadcast(result.room, viewer);
+      return;
+    }
+
     // ---- game actions: identity from the connection, time from the server
     const at = deps.now();
     let change: (room: Room) => Mutation;

@@ -385,7 +385,8 @@ describe("TIMEOUT", () => {
 
 // ---- LEAVE ----
 describe("LEAVE", () => {
-  const leave = (s: GameState, playerId: string) => reduce(s, { type: "LEAVE", playerId });
+  const leave = (s: GameState, playerId: string, at = 0) => reduce(s, { type: "LEAVE", playerId, at });
+  const ids = (s: GameState) => s.players.map((p) => p.id);
 
   it("removes the player and their score in the lobby", () => {
     const s = ok(leave(lobbyWith("ana", "beto"), "ana"));
@@ -397,8 +398,77 @@ describe("LEAVE", () => {
     expect(leave(lobbyWith("ana"), "zoe")).toEqual({ ok: false, error: "UNKNOWN_PLAYER" });
   });
 
-  it("is lobby-only for now (mid-game leaving comes with reconnection)", () => {
-    expect(leave(game(["ana", "beto"]), "ana")).toEqual({ ok: false, error: "WRONG_PHASE" });
+  describe("mid-game", () => {
+    it("keeps the seat and score for the podium but marks them as left", () => {
+      const s = ok(leave(game(["ana", "beto", "caro"]), "beto"));
+      expect(ids(s)).toEqual(["ana", "beto", "caro"]);
+      expect(s.left).toEqual(["beto"]);
+      expect(s.scores.beto).toBe(0);
+    });
+
+    it("passes the turn on if it was theirs to pick", () => {
+      const s = ok(leave(game(["ana", "beto", "caro"]), "ana"));
+      expect(s.turnOwner).toBe(1);
+      expect(s.phase.kind).toBe("picking");
+    });
+
+    it("skips them when the turn comes around", () => {
+      const g = ok(leave(game(["ana", "beto", "caro"]), "beto"));
+      const id = g.board[0]!.id;
+      const s = ok(answer(ok(pick(g, "ana", id)), "ana", right(g, id)));
+      expect(s.players[s.turnOwner]!.id).toBe("caro");
+    });
+
+    it("plays out their open answer like a timeout: no points lost, the steal moves on", () => {
+      const g = game(["ana", "beto", "caro"]);
+      const id = g.board[0]!.id;
+      const s = ok(leave(ok(pick(g, "ana", id, 1_000)), "ana", 2_000));
+      expect(s.phase).toMatchObject({ kind: "answering", answerer: "beto", tried: ["ana"] });
+      expect(s.scores.ana).toBe(0);
+    });
+
+    it("never hands them a steal", () => {
+      const g = ok(leave(game(["ana", "beto", "caro"]), "beto"));
+      const id = g.board[0]!.id;
+      const s = ok(answer(ok(pick(g, "ana", id)), "ana", wrong(g, id)));
+      expect(s.phase).toMatchObject({ kind: "answering", answerer: "caro" });
+    });
+
+    it("closes the card when the leaver was the last one who could answer", () => {
+      const g = game(["ana", "beto"]);
+      const id = g.board[0]!.id;
+      const stealing = ok(answer(ok(pick(g, "ana", id)), "ana", wrong(g, id)));   // beto may steal
+      const s = ok(leave(stealing, "beto", 5_000));
+      expect(s.phase.kind).toBe("picking");
+      expect(s.board.find((c) => c.id === id)!.played).toBe(true);
+      expect(s.reveal).toMatchObject({ cardId: id, closedAt: 5_000 });
+      expect(s.players[s.turnOwner]!.id).toBe("ana"); // the only one still playing
+    });
+
+    it("ends the game when everyone has left", () => {
+      const s = ok(leave(ok(leave(game(["ana", "beto"]), "ana")), "beto"));
+      expect(s.phase.kind).toBe("gameOver");
+    });
+
+    it("leaving twice is harmless", () => {
+      const once = ok(leave(game(["ana", "beto", "caro"]), "beto"));
+      expect(ok(leave(once, "beto"))).toEqual(once);
+    });
+
+    it("on the podium it withdraws their encore, and a rematch leaves them out", () => {
+      let s = ok(reduce(game(["ana", "beto"]), { type: "END" }));
+      s = ok(reduce(s, { type: "ENCORE", playerId: "beto" }));
+      s = ok(leave(s, "beto"));
+      expect(s.encore).toEqual([]);
+      const lobby = ok(reduce(s, { type: "REMATCH", keep: ["ana", "beto"] }));
+      expect(ids(lobby)).toEqual(["ana"]);
+      expect(lobby.left).toEqual([]);
+    });
+
+    it("can't leave a closed room", () => {
+      const closed = ok(reduce(lobbyWith("ana"), { type: "CLOSE" }));
+      expect(leave(closed, "ana")).toEqual({ ok: false, error: "WRONG_PHASE" });
+    });
   });
 });
 

@@ -106,12 +106,15 @@ export function Scoreboard({ view, connected, me }: { view: PublicState; connect
       {rankings(view).map(({ player, score, rank }) => (
         <li
           key={player.id}
-          className={[player.id === me && "me", player.id === owner && view.phase.kind !== "lobby" && "turn", !connected.includes(player.id) && "away"]
-            .filter(Boolean).join(" ")}
+          className={[
+            player.id === me && "me",
+            player.id === owner && view.phase.kind !== "lobby" && "turn",
+            (view.left.includes(player.id) || !connected.includes(player.id)) && "away",
+          ].filter(Boolean).join(" ")}
         >
           <span className="rank">{rank}</span>
           <Avatar id={player.id} name={player.name} size={36} />
-          <span className="name">{player.name}</span>
+          <span className="name">{player.name}{view.left.includes(player.id) && <span className="gone"> · salió</span>}</span>
           <span className="score">
             {money(score)}
             {pops[player.id] && (
