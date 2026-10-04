@@ -30,6 +30,8 @@ export type ClientMessage =
   | { t: "encore" }
   /** Host only, in the lobby: change some house rules (game-core validates the values). */
   | { t: "rules"; rules: Partial<Record<keyof Rules, unknown>> }
+  /** Host only, in the lobby: try a private pack's code. A match unlocks it for this room. */
+  | { t: "unlock"; code: string }
   /** Host only, in the lobby: which categories to play (each must exist in the catalog). */
   | { t: "picks"; picks: Pick[] }
   /** Heartbeat: measures latency and keeps API Gateway from closing an idle socket (10 min). */
@@ -49,6 +51,8 @@ export interface PackInfo {
   name: string;
   description: string;
   categories: { name: string; count: number }[];
+  /** A private pack unlocked in this room (never listed anywhere else). */
+  private?: boolean;
 }
 
 export type ServerMessage =
@@ -61,6 +65,8 @@ export type ServerMessage =
       serverTime: number;           // lets clients convert server deadlines to their own clock
     }
   | { t: "catalog"; packs: PackInfo[] }
+  /** The code matched: this pack is now part of the room. */
+  | { t: "unlocked"; pack: { id: string; name: string } }
   | { t: "created"; room: string; hostToken: string }
   | { t: "joined"; playerId: PlayerId; token: string }
   | { t: "error"; error: GameError | ProtocolError }
@@ -76,6 +82,8 @@ export type ProtocolError =
   | "BAD_TOKEN"
   | "NOT_ENOUGH_QUESTIONS_FOR_SELECTION"
   | "UNKNOWN_CATEGORY"  // a pick names a category no pack has
+  | "BAD_CODE"          // no private pack opens with that code
+  | "TOO_MANY_ATTEMPTS" // this room tried too many wrong codes
   | "BUSY";             // too much contention on the room, try again
 
 // ---------------------------------------------------------------- validation
@@ -127,6 +135,10 @@ export function parseClientMessage(raw: string | undefined): ClientMessage | nul
       if (data.categories) msg.categories = data.categories;
       return msg;
     }
+    case "unlock":
+      return typeof data.code === "string" && data.code.trim().length > 0 && data.code.length <= 100
+        ? { t: "unlock", code: data.code }
+        : null;
     case "picks":
       return Array.isArray(data.picks) &&
         data.picks.length <= 60 &&

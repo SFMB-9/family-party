@@ -21,6 +21,8 @@ const MESSAGES: Record<string, string> = {
   BAD_MESSAGE: "El servidor no entendió (puede estar actualizándose). Intenta en un momento.",
   UNKNOWN_CATEGORY: "Esa categoría ya no existe.",
   INVALID_PICKS: "Elige al menos una categoría.",
+  BAD_CODE: "Ese código no abre ningún paquete.",
+  TOO_MANY_ATTEMPTS: "Demasiados intentos en esta sala. Crea una sala nueva para intentar de nuevo.",
 };
 
 export const describeError = (code: string | null) => (code ? MESSAGES[code] ?? "Algo salió mal." : null);

@@ -15,6 +15,10 @@ export interface Room {
   hostTokenHash: string;
   playerTokens: Record<string, PlayerId>;  // sha256(token) → public player id
   createdAt: number;
+  /** Private packs unlocked in this room (ids). Lasts for the room and its rematches. Absent in older rooms. */
+  unlocked?: string[];
+  /** Wrong unlock codes tried in this room; capped so nobody can guess forever. */
+  unlockFailures?: number;
 }
 
 export interface RoomRepo {

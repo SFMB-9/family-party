@@ -65,3 +65,11 @@ export class MemoryPush implements Push {
     return undefined;
   }
 }
+
+/** Private packs held in memory (tests). */
+export class MemoryPacks {
+  constructor(public packs: import("./packs").PrivatePack[] = []) {}
+  async list() {
+    return this.packs;
+  }
+}

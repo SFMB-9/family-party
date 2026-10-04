@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Question } from "@family-party/game-core";
-import { createApp } from "./app";
-import { MemoryConnections, MemoryPush, MemoryRooms } from "./memory";
+import { catalog as catalogOf, toGameQuestion, type Pack } from "@family-party/question-bank";
+import { MAX_UNLOCK_FAILURES, createApp } from "./app";
+import { MemoryConnections, MemoryPacks, MemoryPush, MemoryRooms } from "./memory";
+import { hashCode, verifyCode, type PrivatePack } from "./packs";
 
 // ---------------------------------------------------------------- test harness
 
@@ -21,6 +23,19 @@ const BANK: Question[] = CATEGORIES.flatMap((category) =>
   })),
 );
 
+/** A private pack for the unlock tests: one category, 4 questions. Locked with a fast hash. */
+const FAMILIA: Pack = {
+  id: "familia",
+  name: "Familia",
+  description: "",
+  questions: [0, 1, 2, 3].map((i) => ({
+    id: `f${i}`, category: "Viajes", text: `Viaje ${i}`, options: ["A", "B"], correct: [0], difficulty: 1 as const, timeLimitSec: 10, stealable: true,
+  })),
+};
+const CODE = "TAMALESABUELA26";
+let familia: PrivatePack;
+let privatePacks: MemoryPacks;
+
 let rooms: MemoryRooms;
 let connections: MemoryConnections;
 let push: MemoryPush;
@@ -28,7 +43,9 @@ let clock: number;
 let counter: number;
 let app: ReturnType<typeof createApp>;
 
-beforeEach(() => {
+beforeEach(async () => {
+  familia ??= { pack: FAMILIA, access: await hashCode(CODE, { N: 2 ** 10, r: 8, p: 1 }) };
+  privatePacks = new MemoryPacks([familia]);
   rooms = new MemoryRooms();
   connections = new MemoryConnections();
   push = new MemoryPush();
@@ -42,11 +59,19 @@ beforeEach(() => {
     randomInt: (max) => counter++ % max,
     randomToken: () => `token-${counter++}-xxxxxxxxxxxxxxxxxxxx`,
     hash: (t) => createHash("sha256").update(t).digest("hex"),
-    questions: (selection) =>
-      selection.picks ? BANK.filter((q) => selection.picks!.some((p) => p.category === q.category)) : BANK,
-    catalog: () => [{ id: "test", name: "Test", description: "", categories: CATEGORIES.map((name) => ({ name, count: 4 })) }],
+    questions: (selection, extra) => {
+      const all = [...BANK, ...extra.flatMap((p) => p.questions.map(toGameQuestion))];
+      return selection.picks ? all.filter((q) => selection.picks!.some((p) => p.category === q.category)) : all;
+    },
+    catalog: (extra) => [
+      { id: "test", name: "Test", description: "", categories: CATEGORIES.map((name) => ({ name, count: 4 })) },
+      ...catalogOf(extra).map((p) => ({ ...p, private: true })),
+    ],
     defaultPicks: () => CATEGORIES.map((category) => ({ pack: "test", category })),
-    picksExist: (picks) => picks.every((p) => p.pack === "test" && CATEGORIES.includes(p.category)),
+    picksExist: (picks, extra) =>
+      picks.every((p) => (p.pack === "test" && CATEGORIES.includes(p.category)) || extra.some((e) => e.id === p.pack)),
+    privatePacks,
+    verifyCode,
   });
 });
 
@@ -276,6 +301,64 @@ describe("picking categories", () => {
 
     await send("host", { t: "start" });
     expect(new Set(stateOf("ana").view.board.map((c) => c.category))).toEqual(new Set(["Dos"]));
+  });
+});
+
+describe("private packs", () => {
+  it("a wrong code unlocks nothing and counts toward the room's cap", async () => {
+    await createRoom();
+    await send("host", { t: "unlock", code: "TAMALESABUELA25" });
+    expect(errorOf("host")).toBe("BAD_CODE");
+    expect(push.last("host", "unlocked")).toBeUndefined();
+  });
+
+  it("the right code (any form) unlocks the pack for this room: catalog, picks and the deal", async () => {
+    const { code } = await createRoom();
+    await joinAs("ana", code, "Ana");
+    await send("host", { t: "unlock", code: "tamales abuela 26" });
+    expect(push.last("host", "unlocked")).toEqual({ t: "unlocked", pack: { id: "familia", name: "Familia" } });
+    expect(push.last("host", "catalog")!.packs.find((p) => p.id === "familia")).toMatchObject({ private: true });
+    expect(stateOf("ana").view.picks).toContainEqual({ pack: "familia", category: "Viajes" });
+
+    await send("host", { t: "picks", picks: [{ pack: "familia", category: "Viajes" }] });
+    await send("host", { t: "start" });
+    expect(new Set(stateOf("ana").view.board.map((c) => c.category))).toEqual(new Set(["Viajes"]));
+  });
+
+  it("stays private: other rooms and non-hosts never see it", async () => {
+    const first = await createRoom();
+    await send("host", { t: "unlock", code: CODE });
+
+    await joinAs("ana", first.code, "Ana");
+    await send("ana", { t: "catalog" });
+    expect(push.last("ana", "catalog")!.packs.map((p) => p.id)).toEqual(["test"]);   // a player asking gets the public list
+    await send("ana", { t: "unlock", code: CODE });
+    expect(errorOf("ana")).toBe("NOT_HOST");
+
+    await app.connect("lobby2", undefined);
+    await send("lobby2", { t: "create" });
+    const other = push.last("lobby2", "created")!;
+    await app.connect("host2", other.room);
+    await send("host2", { t: "hello", token: other.hostToken });
+    await send("host2", { t: "catalog" });
+    expect(push.last("host2", "catalog")!.packs.map((p) => p.id)).toEqual(["test"]);
+    await send("host2", { t: "picks", picks: [{ pack: "familia", category: "Viajes" }] });
+    expect(errorOf("host2")).toBe("UNKNOWN_CATEGORY");
+  });
+
+  it(`stops accepting codes after ${MAX_UNLOCK_FAILURES} wrong ones`, async () => {
+    await createRoom();
+    for (let i = 0; i < MAX_UNLOCK_FAILURES; i++) await send("host", { t: "unlock", code: `intento ${i}` });
+    await send("host", { t: "unlock", code: CODE });   // even the right one, now
+    expect(errorOf("host")).toBe("TOO_MANY_ATTEMPTS");
+  });
+
+  it("only in the lobby", async () => {
+    const { code } = await createRoom();
+    await joinAs("ana", code, "Ana");
+    await send("host", { t: "start" });
+    await send("host", { t: "unlock", code: CODE });
+    expect(errorOf("host")).toBe("WRONG_PHASE");
   });
 });
 

@@ -23,7 +23,8 @@ import {
   type PackInfo,
   type ProtocolError,
 } from "@family-party/protocol";
-import type { Selection } from "@family-party/question-bank";
+import type { Pack, Selection } from "@family-party/question-bank";
+import type { Access, PackSource, PrivatePack } from "./packs";
 import type { Pick } from "@family-party/game-core";
 import type { Connection, ConnectionRepo, Push, Room, RoomRepo } from "./ports";
 
@@ -36,18 +37,25 @@ export interface Deps {
   randomInt: (maxExclusive: number) => number;
   randomToken: () => string;
   hash: (token: string) => string;
-  questions: (selection: Selection) => Question[];
-  catalog: () => PackInfo[];
+  /** Questions for a selection, from the public packs plus `extra` (private packs unlocked in the room). */
+  questions: (selection: Selection, extra: Pack[]) => Question[];
+  /** Public packs, then `extra` marked private. */
+  catalog: (extra: Pack[]) => PackInfo[];
   /** What a new room starts with: every public category. */
   defaultPicks: () => Pick[];
-  /** Do these picks name categories that exist? */
-  picksExist: (picks: Pick[]) => boolean;
+  /** Do these picks name categories that exist (in the public packs or `extra`)? */
+  picksExist: (picks: Pick[], extra: Pack[]) => boolean;
+  /** Private packs (S3 in the Lambda). */
+  privatePacks: PackSource;
+  verifyCode: (code: string, access: Access) => Promise<boolean>;
 }
 
 type AppError = GameError | ProtocolError;
 type Mutation = { ok: true; room: Room } | { ok: false; error: AppError };
 
 const MAX_SAVE_ATTEMPTS = 5;
+/** Wrong codes a room may try. With long passphrases and API Gateway throttling, guessing is hopeless. */
+export const MAX_UNLOCK_FAILURES = 10;
 
 export function createApp(deps: Deps) {
   const { rooms, connections, push } = deps;
@@ -112,6 +120,11 @@ export function createApp(deps: Deps) {
     return result.ok ? result.state : initialState();
   };
 
+  /** The private packs this room unlocked, out of all of them. */
+  const unlockedIn = (room: Room, all: PrivatePack[]) => all.filter((p) => room.unlocked?.includes(p.pack.id)).map((p) => p.pack);
+  /** Most rooms never unlock anything: only touch S3 when this one did. */
+  const extraFor = async (room: Room | null) => (room?.unlocked?.length ? unlockedIn(room, await deps.privatePacks.list()) : []);
+
   const newRoomCode = () =>
     Array.from({ length: ROOM_CODE_LENGTH }, () => ROOM_CODE_ALPHABET[deps.randomInt(ROOM_CODE_ALPHABET.length)]).join("");
 
@@ -159,7 +172,9 @@ export function createApp(deps: Deps) {
 
     // ---- lobby messages: no room needed
     if (msg.t === "catalog") {
-      await push.send(connectionId, { t: "catalog", packs: deps.catalog() });
+      // Only the host of a room sees its unlocked private packs; everyone else gets the public list.
+      const room = conn.role === "host" && conn.roomCode ? await rooms.get(conn.roomCode) : null;
+      await push.send(connectionId, { t: "catalog", packs: deps.catalog(await extraFor(room)) });
       return;
     }
     if (msg.t === "create") {
@@ -167,7 +182,7 @@ export function createApp(deps: Deps) {
         ...(msg.packs && { packs: msg.packs }),
         ...(msg.categories && { categories: msg.categories }),
       };
-      if (deps.questions(selection).length === 0) return void (await sendError(connectionId, "NOT_ENOUGH_QUESTIONS_FOR_SELECTION"));
+      if (deps.questions(selection, []).length === 0) return void (await sendError(connectionId, "NOT_ENOUGH_QUESTIONS_FOR_SELECTION"));
 
       const hostToken = deps.randomToken();
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -229,21 +244,26 @@ export function createApp(deps: Deps) {
       return;
     }
 
+    if (msg.t === "unlock") return void (await unlock(conn, code, msg.code));
+
     // ---- game actions: identity from the connection, time from the server
     const at = deps.now();
     let change: (room: Room) => Mutation;
 
     switch (msg.t) {
-      case "start":
+      case "start": {
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+        const loaded = await rooms.get(code);
+        const privates = loaded?.unlocked?.length ? await deps.privatePacks.list() : [];
         change = (room) =>
           applyAction(room, {
             type: "START",
             // Rooms from before lobby picks have none: they keep dealing from their home-page selection.
-            questions: deps.questions(room.state.picks.length ? { picks: room.state.picks } : room.selection),
+            questions: deps.questions(room.state.picks.length ? { picks: room.state.picks } : room.selection, unlockedIn(room, privates)),
             seed: deps.randomInt(2 ** 31),
           });
         break;
+      }
       case "end":
       case "close":
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
@@ -251,7 +271,7 @@ export function createApp(deps: Deps) {
         break;
       case "picks": {
         if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
-        if (!deps.picksExist(msg.picks)) return void (await sendError(connectionId, "UNKNOWN_CATEGORY"));
+        if (!deps.picksExist(msg.picks, await extraFor(await rooms.get(code)))) return void (await sendError(connectionId, "UNKNOWN_CATEGORY"));
         const picks = msg.picks;
         change = (room) => applyAction(room, { type: "SET_PICKS", picks });
         break;
@@ -303,6 +323,48 @@ export function createApp(deps: Deps) {
       if (msg.t !== "timeout") await sendError(connectionId, result.error);
       return;
     }
+    await broadcast(result.room);
+  }
+
+  /**
+   * The host typed a code. Check it against every private pack this room hasn't unlocked yet
+   * (only hashes are compared). A match unlocks that pack for this room, picks all its
+   * categories, and sends the host the updated catalog. A miss counts toward the room's cap.
+   */
+  async function unlock(conn: Connection, code: string, attempt: string): Promise<void> {
+    const { connectionId } = conn;
+    if (conn.role !== "host") return void (await sendError(connectionId, "NOT_HOST"));
+    const room = await rooms.get(code);
+    if (!room) return void (await sendError(connectionId, "ROOM_NOT_FOUND"));
+    if (room.state.phase.kind !== "lobby") return void (await sendError(connectionId, "WRONG_PHASE"));
+    if ((room.unlockFailures ?? 0) >= MAX_UNLOCK_FAILURES) return void (await sendError(connectionId, "TOO_MANY_ATTEMPTS"));
+
+    const all = await deps.privatePacks.list();
+    let match: PrivatePack | undefined;
+    for (const candidate of all.filter((p) => !room.unlocked?.includes(p.pack.id))) {
+      if (await deps.verifyCode(attempt, candidate.access)) {
+        match = candidate;
+        break;
+      }
+    }
+
+    if (!match) {
+      await mutate(code, (r) => ({ ok: true, room: { ...r, unlockFailures: (r.unlockFailures ?? 0) + 1 } }));
+      return void (await sendError(connectionId, "BAD_CODE"));
+    }
+
+    const pack = match.pack;
+    const categories = [...new Set(pack.questions.filter((q) => !q.hidden).map((q) => q.category))];
+    const result = await mutate(code, (r) => {
+      if (r.state.phase.kind !== "lobby") return { ok: false, error: "WRONG_PHASE" };
+      const unlocked = [...new Set([...(r.unlocked ?? []), pack.id])];
+      const fresh = categories.filter((c) => !r.state.picks.some((p) => p.pack === pack.id && p.category === c));
+      return applyAction({ ...r, unlocked }, { type: "SET_PICKS", picks: [...r.state.picks, ...fresh.map((category) => ({ pack: pack.id, category }))] });
+    });
+    if (!result.ok) return void (await sendError(connectionId, result.error));
+
+    await push.send(connectionId, { t: "unlocked", pack: { id: pack.id, name: pack.name } });
+    await push.send(connectionId, { t: "catalog", packs: deps.catalog(unlockedIn(result.room, all)) });
     await broadcast(result.room);
   }
 
