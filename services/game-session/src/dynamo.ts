@@ -10,7 +10,16 @@ const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 const ROOM_TTL_SECONDS = 12 * 60 * 60;        // idle rooms disappear after 12h
 const CONNECTION_TTL_SECONDS = 12 * 60 * 60;  // safety net for missed $disconnects
-const ttl = (seconds: number) => Math.floor(Date.now() / 1000) + seconds;
+const nowSeconds = () => Math.floor(Date.now() / 1000);
+const ttl = (seconds: number) => nowSeconds() + seconds;
+
+/**
+ * DynamoDB's TTL sweep is lazy: an expired item can still be read for hours, even days, until
+ * AWS gets around to deleting it. So a room past its expiresAt counts as gone, here, not when
+ * the item disappears.
+ */
+export const isExpired = (item: { expiresAt?: unknown }, now = nowSeconds()) =>
+  typeof item.expiresAt === "number" && item.expiresAt <= now;
 
 /**
  * Room item: { roomCode, version, data, expiresAt }.
@@ -23,14 +32,15 @@ export class DynamoRooms implements RoomRepo {
   async get(code: string): Promise<Room | null> {
     // ConsistentRead: optimistic locking needs the latest version, not a possibly stale copy.
     const { Item } = await db.send(new GetCommand({ TableName: this.table, Key: { roomCode: code }, ConsistentRead: true }));
-    if (!Item) return null;
+    if (!Item || isExpired(Item)) return null;
     const data = JSON.parse(Item.data as string) as Omit<Room, "code" | "version">;
     // Rooms outlive deploys (12 h TTL): bring state written by older code up to date.
     return { ...data, state: upgradeState(data.state), code, version: Item.version as number };
   }
 
   async create(room: Room): Promise<boolean> {
-    return this.write(room, 0, "attribute_not_exists(roomCode)");
+    // A new room may take the code of an expired one that the TTL sweep hasn't deleted yet.
+    return this.write(room, 0, "attribute_not_exists(roomCode) OR expiresAt <= :now", { ":now": nowSeconds() });
   }
 
   async save(room: Room): Promise<boolean> {
