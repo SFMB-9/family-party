@@ -600,3 +600,49 @@ input {
   .nerds-card { padding: 16px; }
   .nerds-detail p { font-size: var(--t1); }
 }
+
+/* ── The host screen on a phone ──────────────────────────────────────────────
+   The host page is sized for a TV. Opened on a phone (the host plays from it, or taps
+   the link inside Instagram), the TV sizes forced the page wider than the screen and
+   the browser zoomed out. Under 600px it falls back to the phone sizes, and nothing
+   may be wider than the screen. Keep this block last so it wins over the .host rules. */
+@media (max-width: 600px) {
+  .shell.host { padding: 16px; }
+  .host .top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .host .top-right { margin-left: auto; gap: 8px; }
+  .host .top .room-code { font-size: 24px; padding: 6px 10px; }
+  .host .connection { padding: 6px 8px; background: none; }
+  .host .connection > span:not(.sr-only) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .host .logo { font-size: 24px; }
+  .host .pixel-title { font-size: 24px; }
+  .host .pixel-title.small { font-size: 12px; }
+
+  /* Lobby */
+  .lobby-join, .lobby-roster { padding: 24px 16px; }
+  .lobby-roster { padding-bottom: 80px; } /* room for the rules badge and cog in the corner */
+  .lobby-join .pixel-title { font-size: 12px; }
+  .room-code.huge { font-size: 72px; padding: 8px 16px; }
+  .join-url { font-size: var(--t1); overflow-wrap: anywhere; }
+  .roster { grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; gap: 8px; }
+  .roster .empty-slot, .roster .avatar { width: 100% !important; height: auto !important; aspect-ratio: 1; }
+  .host .choice { grid-template-columns: 1fr; gap: 4px; }
+
+  /* Board and question */
+  .host .card { font-size: 12px; }
+  .host .category { font-family: var(--text); font-size: var(--t1); line-height: 1; min-height: 3em; }
+  .host .timer { font-size: 36px; }
+  .host .question h2 { font-size: var(--t1h); min-height: 0; padding: 16px; }
+  .host .option { font-size: var(--t1h); padding: 12px 14px; min-height: 0; }
+  .host .letter { font-size: 12px; }
+  .host .scores li { font-size: var(--t1); }
+  .host .scores .score, .host .pop { font-size: 12px; }
+
+  /* Overlays and podium */
+  .host-screen .reveal { padding: 16px; }
+  .host-screen .reveal h2 { font-size: var(--t1h); }
+  .host-screen .reveal-options li { font-size: var(--t1h); padding: 10px 12px; }
+  .host-screen .headline { font-size: 24px; }
+  .host .podium .trophy { width: 48px; height: 48px; }
+  .host .podium .name, .host .podium .score { font-size: 24px; }
+}
+@media (min-width: 420px) and (max-width: 600px) { .host .card { font-size: 24px; } }
