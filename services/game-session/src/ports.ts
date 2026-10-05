@@ -4,7 +4,7 @@
  * Swapping DynamoDB for another store would mean writing one new file.
  */
 import type { GameState, PlayerId } from "@family-party/game-core";
-import type { Role, ServerMessage } from "@family-party/protocol";
+import type { Role, RoomPack, ServerMessage } from "@family-party/protocol";
 import type { Selection } from "@family-party/question-bank";
 
 export interface Room {
@@ -17,6 +17,8 @@ export interface Room {
   createdAt: number;
   /** Private packs unlocked in this room (ids). Lasts for the room and its rematches. Absent in older rooms. */
   unlocked?: string[];
+  /** Name and category count of each unlocked pack, for the rules badge on every screen. Absent in older rooms. */
+  unlockedInfo?: RoomPack[];
   /** Wrong unlock codes tried in this room; capped so nobody can guess forever. */
   unlockFailures?: number;
 }

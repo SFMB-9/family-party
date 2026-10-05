@@ -311,6 +311,7 @@ describe("private packs", () => {
     await send("host", { t: "unlock", code: "TAMALESABUELA25" });
     expect(errorOf("host")).toBe("BAD_CODE");
     expect(push.last("host", "unlocked")).toBeUndefined();
+    expect(stateOf("host").packs).toBeUndefined();
   });
 
   it("the right code (any form) unlocks the pack for this room: catalog, picks and the deal", async () => {
@@ -320,6 +321,8 @@ describe("private packs", () => {
     expect(push.last("host", "unlocked")).toEqual({ t: "unlocked", pack: { id: "familia", name: "Familia" } });
     expect(push.last("host", "catalog")!.packs.find((p) => p.id === "familia")).toMatchObject({ private: true });
     expect(stateOf("ana").view.picks).toContainEqual({ pack: "familia", category: "Viajes" });
+    // Every phone learns the pack's name and size (for its rules badge), never its questions.
+    expect(stateOf("ana").packs).toEqual([{ id: "familia", name: "Familia", categories: 1 }]);
 
     await send("host", { t: "picks", picks: [{ pack: "familia", category: "Viajes" }] });
     await send("host", { t: "start" });

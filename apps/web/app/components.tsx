@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { describeError as describeErrorText } from "./lib/errors";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { PackInfo } from "@family-party/protocol";
+import type { PackInfo, RoomPack } from "@family-party/protocol";
 import { DEFAULT_RULES, rankings, rowsFor, type Card, type Phase, type Pick, type PlayerId, type PublicState, type Rules } from "@family-party/game-core";
 
 // ---------------------------------------------------------------- helpers
@@ -631,16 +631,16 @@ function CogIcon() {
  * "Reglas de esta partida" as a booklet: closed by default so the lobby stays simple,
  * but it says when the host changed something, and changed rules are gold inside.
  */
-export function RulesSummary({ rules, picks = [], onEdit, catalog }: {
+export function RulesSummary({ rules, picks = [], onEdit, packs }: {
   rules: Rules; picks?: Pick[];
   /** Host lobby: an "Editar" button next to the badge opens the options. */
   onEdit?: () => void;
-  /** Host only (phones don't load it): lets the badge name a private pack played on its own. */
-  catalog?: PackInfo[] | null;
+  /** Private packs unlocked in the room (from the server's state message): lets the badge name one played on its own. */
+  packs?: RoomPack[] | undefined;
 }) {
   const [open, setOpen] = useState(false);
   const changed = RULE_KEYS.filter((k) => rules[k] !== DEFAULT_RULES[k]);
-  const label = badgeLabel(rules, picks, changed.length, catalog);
+  const label = badgeLabel(picks, changed.length, packs);
   const isChanged = (...keys: (keyof Rules)[]) => keys.some((k) => changed.includes(k));
 
   const rows: [string, string, boolean][] = [
@@ -700,11 +700,11 @@ export function RulesSummary({ rules, picks = [], onEdit, catalog }: {
  * - categories from more than one pack, or changed rules → "Reglas personalizadas";
  * - otherwise "Reglas clásicas".
  */
-function badgeLabel(rules: Rules, picks: Pick[], changedRules: number, catalog?: PackInfo[] | null): string {
+function badgeLabel(picks: Pick[], changedRules: number, unlocked?: RoomPack[]): string {
   const packs = [...new Set(picks.map((p) => p.pack))];
-  if (packs.length === 1 && catalog) {
-    const pack = catalog.find((p) => p.id === packs[0]);
-    if (pack?.private && pack.categories.every((c) => picks.some((p) => p.category === c.name))) return pack.name;
+  if (packs.length === 1) {
+    const pack = unlocked?.find((p) => p.id === packs[0]);
+    if (pack && new Set(picks.map((p) => p.category)).size >= pack.categories) return pack.name;
   }
   return packs.length > 1 || changedRules > 0 ? "Reglas personalizadas" : "Reglas clásicas";
 }
