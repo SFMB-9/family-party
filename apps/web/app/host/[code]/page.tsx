@@ -3,8 +3,8 @@
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
-  AfterGame, Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, OptionsPanel,
-  Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow,
+  AfterGame, Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, Reveal, RoomClosed, OptionsPanel,
+  Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow, revealShowing,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 
@@ -28,7 +28,9 @@ export default function HostPage() {
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
-  const revealing = !!reveal && serverNow - reveal.closedAt <= REVEAL_MS;
+  // Tapping the reveal closes it on this screen only, like on a phone (the host may be playing from here).
+  const [dismissed, setDismissed] = useState<number | null>(null);
+  const revealing = !!state && revealShowing(state.view, serverNow, dismissed);
   const forget = useCallback(() => {
     tokenStore.clear(code, "host");
     tokenStore.clear(code, "player");
@@ -204,7 +206,7 @@ export default function HostPage() {
         {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
-      <Reveal view={view} serverNow={serverNow} />
+      {revealing && <Reveal view={view} serverNow={serverNow} onClose={() => setDismissed(reveal!.closedAt)} {...(me && { me })} />}
       {opening.active && <Roulette view={view} onDone={opening.finish} />}
       <Announcement view={view} holdWhile={revealing || opening.active} skipFirstTurn={opening.ran} />
     </div>

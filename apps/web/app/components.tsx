@@ -216,6 +216,16 @@ export function QuestionPanel({
 
 export const REVEAL_MS = 5_000;
 
+/**
+ * Is the last card's reveal still on? Up to REVEAL_MS after it closed, and only until the next card
+ * opens: once someone picks, every screen drops it, so the TV never covers a question with an old answer.
+ * Each screen can also be tapped to close it early (`dismissedAt`, local to that screen).
+ */
+export function revealShowing(view: PublicState, serverNow: number, dismissedAt: number | null = null): boolean {
+  const reveal = view.reveal;
+  return !!reveal && reveal.closedAt !== dismissedAt && serverNow - reveal.closedAt <= REVEAL_MS && view.phase.kind !== "answering";
+}
+
 /** After a card closes: the right answer, who picked what, and the points. Non-blocking: play continues underneath. */
 export function Reveal({ view, serverNow, onClose, me }: {
   view: PublicState; serverNow: number; onClose?: () => void;
@@ -223,7 +233,7 @@ export function Reveal({ view, serverNow, onClose, me }: {
   me?: PlayerId | null;
 }) {
   const reveal = view.reveal;
-  if (!reveal || serverNow - reveal.closedAt > REVEAL_MS) return null;
+  if (!reveal || !revealShowing(view, serverNow)) return null;
 
   const pickedBy = (i: number) => reveal.results.filter((r) => r.choice === i);
   const timedOut = reveal.results.filter((r) => r.choice === null);
