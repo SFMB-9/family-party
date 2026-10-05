@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, REVEAL_MS, Reveal, RoomClosed, Roulette, RulesSummary, Scoreboard, money, nameOf, stageOf, useOpening, useServerNow,
+  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, Reveal, RoomClosed, Roulette, RulesSummary, Scoreboard, money, nameOf, stageOf, useOpening, useServerNow, revealShowing,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -35,7 +35,7 @@ export default function PlayPage() {
   const myTurn = view.phase.kind === "picking" && view.players[view.turnOwner]?.id === me;
   const myAnswer = view.phase.kind === "answering" && view.phase.answerer === me;
   const myScore = me ? view.scores[me] ?? 0 : 0;
-  const revealing = !!reveal && reveal.closedAt !== dismissed && serverNow - reveal.closedAt <= REVEAL_MS;
+  const revealing = revealShowing(view, serverNow, dismissed);
 
   /**
    * Leaving gives up the seat. In the lobby the name frees up; mid-game this phone drops out of
