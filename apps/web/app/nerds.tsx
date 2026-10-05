@@ -2,12 +2,17 @@
 
 /**
  * "For Nerds": the cloud architecture behind the game, as a clickable pixel diagram.
- * Sprites live in /public/sprites/arch/<id>.png (24×24, drawn at 2×). Swap the PNGs to restyle;
- * the layout, edges and copy are all here.
+ * Icons come from one sprite sheet, /public/sprites/arch.png: 16×16 cells, 5 per row, in ARCH_SHEET
+ * order, drawn at 3×. Draw over the sheet to restyle; the layout, edges and copy are all here.
  */
 import { useEffect, useState } from "react";
+import { CELL, cellOrigin, sheetSize } from "./sprites";
 
-type NodeId = "players" | "vercel" | "apigw" | "lambda" | "dynamodb" | "s3" | "iam" | "budget" | "actions" | "tfstate";
+/** Cell order in /public/sprites/arch.png. Append new icons at the end so existing cells keep their place. */
+const ARCH_SHEET = ["players", "vercel", "apigw", "lambda", "dynamodb", "s3", "iam", "budget", "actions", "tfstate"] as const;
+type NodeId = (typeof ARCH_SHEET)[number];
+const ARCH_SIZE = sheetSize(ARCH_SHEET.length);
+const SPRITE_PX = CELL * 3;
 
 interface ArchNode {
   id: NodeId;
@@ -158,7 +163,7 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setSelected(n.id))}
             >
               <rect width={BOX_W} height={BOX_H} className="box" />
-              <image href={`/sprites/arch/${n.id}.png`} x={BOX_W / 2 - 24} y={10} width={48} height={48} className="sprite" />
+              <ArchSprite id={n.id} x={BOX_W / 2 - SPRITE_PX / 2} y={10} />
               <text x={BOX_W / 2} y={80} className="node-label">{n.label}</text>
             </g>
           ))}
@@ -189,6 +194,22 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
         </footer>
       </div>
     </div>
+  );
+}
+
+/**
+ * One cell of the arch sheet: a nested SVG whose viewBox crops the sheet to that cell.
+ * The crop is inset by a fraction of a pixel: the panel scales to the window, and at
+ * fractional sizes the browser otherwise samples a sliver of the neighbouring cell.
+ */
+const BLEED_INSET = 0.15;
+function ArchSprite({ id, x, y }: { id: NodeId; x: number; y: number }) {
+  const cell = cellOrigin(ARCH_SHEET.indexOf(id));
+  const box = [cell.x + BLEED_INSET, cell.y + BLEED_INSET, CELL - 2 * BLEED_INSET, CELL - 2 * BLEED_INSET];
+  return (
+    <svg x={x} y={y} width={SPRITE_PX} height={SPRITE_PX} viewBox={box.join(" ")}>
+      <image href="/sprites/arch.png" width={ARCH_SIZE.width} height={ARCH_SIZE.height} className="sprite" />
+    </svg>
   );
 }
 
