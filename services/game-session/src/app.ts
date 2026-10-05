@@ -98,11 +98,12 @@ export function createApp(deps: Deps) {
     const connected = [...new Set(all.filter((c) => c.role === "player" && c.playerId).map((c) => c.playerId!))];
     const view = publicView(room.state);
     const serverTime = deps.now();
+    const packs = room.unlockedInfo?.length ? room.unlockedInfo : undefined;
 
     await Promise.all(
       all.map(async (c) => {
         const you = c.playerId ? { role: c.role, playerId: c.playerId } : { role: c.role };
-        const result = await push.send(c.connectionId, { t: "state", room: room.code, view, connected, you, serverTime });
+        const result = await push.send(c.connectionId, { t: "state", room: room.code, view, connected, you, serverTime, ...(packs && { packs }) });
         if (result === "gone") await connections.delete(c.connectionId);
       }),
     );
@@ -376,8 +377,9 @@ export function createApp(deps: Deps) {
     const result = await mutate(code, (r) => {
       if (r.state.phase.kind !== "lobby") return { ok: false, error: "WRONG_PHASE" };
       const unlocked = [...new Set([...(r.unlocked ?? []), pack.id])];
+      const unlockedInfo = [...(r.unlockedInfo ?? []).filter((i) => i.id !== pack.id), { id: pack.id, name: pack.name, categories: categories.length }];
       const fresh = categories.filter((c) => !r.state.picks.some((p) => p.pack === pack.id && p.category === c));
-      return applyAction({ ...r, unlocked }, { type: "SET_PICKS", picks: [...r.state.picks, ...fresh.map((category) => ({ pack: pack.id, category }))] });
+      return applyAction({ ...r, unlocked, unlockedInfo }, { type: "SET_PICKS", picks: [...r.state.picks, ...fresh.map((category) => ({ pack: pack.id, category }))] });
     });
     if (!result.ok) return void (await sendError(connectionId, result.error));
 

@@ -165,7 +165,7 @@ export default function HostPage() {
                       )}
                     </div>
                   )}
-                  <RulesSummary rules={view.rules} picks={view.picks} catalog={catalog} {...(isHost && { onEdit: () => setEditingRules(true) })} />
+                  <RulesSummary rules={view.rules} picks={view.picks} packs={state.packs} {...(isHost && { onEdit: () => setEditingRules(true) })} />
                 </>
               )}
             </div>

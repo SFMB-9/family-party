@@ -57,6 +57,13 @@ export interface PackInfo {
   private?: boolean;
 }
 
+/** A private pack unlocked in a room, as every connection in it sees it: a name and a size, never questions or codes. */
+export interface RoomPack {
+  id: string;
+  name: string;
+  categories: number;
+}
+
 export type ServerMessage =
   | {
       t: "state";
@@ -65,6 +72,8 @@ export type ServerMessage =
       connected: PlayerId[];        // players with at least one open connection
       you: { role: Role; playerId?: PlayerId };
       serverTime: number;           // lets clients convert server deadlines to their own clock
+      /** Private packs unlocked in this room, so every rules badge can name the pack. Absent when none. */
+      packs?: RoomPack[];
     }
   | { t: "catalog"; packs: PackInfo[] }
   /** The code matched: this pack is now part of the room. */
