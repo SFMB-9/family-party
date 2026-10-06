@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lock-pack": "tsx scripts/lock-pack.ts",
-    "pack-sheet": "tsx scripts/pack-sheet.ts"
+    "pack-sheet": "tsx scripts/pack-sheet.ts",
+    "pack-review": "tsx scripts/pack-review.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.164",
