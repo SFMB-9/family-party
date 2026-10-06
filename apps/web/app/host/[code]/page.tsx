@@ -13,6 +13,7 @@ const UNLOCK_ERRORS = new Set(["BAD_CODE", "TOO_MANY_ATTEMPTS"]);
 import { useCountdown } from "../../lib/useCountdown";
 import { tokenStore } from "../../lib/storage";
 import { useRoom } from "../../lib/useRoom";
+import { BRAND } from "../../brand";
 
 /** The shared screen: TV in the living room, or a Discord screen share. */
 export default function HostPage() {
@@ -104,7 +105,7 @@ export default function HostPage() {
     <div className="stage host-screen" data-stage={stageOf(view.phase)}>
       <main className="shell host">
         <header className="top">
-          <h1 className="logo">Family Party</h1>
+          <h1 className="logo">{BRAND}</h1>
           <CopyText className="room-code" text={code} label="el código de la sala" />
           <div className="top-right">
             {isHost && playing && <ConfirmButton label="Terminar" question="¿Terminar ya?" onConfirm={() => send({ t: "end" })} />}

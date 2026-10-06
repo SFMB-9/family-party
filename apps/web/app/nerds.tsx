@@ -7,6 +7,7 @@
  */
 import { useEffect, useState } from "react";
 import { CELL, cellOrigin, sheetSize } from "./sprites";
+import { BRAND } from "./brand";
 
 /** Cell order in /public/sprites/arch.png. Append new icons at the end so existing cells keep their place. */
 const ARCH_SHEET = ["players", "vercel", "apigw", "lambda", "dynamodb", "s3", "iam", "budget", "actions", "tfstate"] as const;
@@ -130,7 +131,7 @@ function NerdsPanel({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="overlay nerds" role="dialog" aria-modal="true" aria-label="How Family Party is built" onClick={onClose}>
+    <div className="overlay nerds" role="dialog" aria-modal="true" aria-label={`How ${BRAND} is built`} onClick={onClose}>
       <div className="nerds-card" onClick={(e) => e.stopPropagation()}>
         <header className="nerds-head">
           <p className="pixel-title">How it&apos;s built</p>

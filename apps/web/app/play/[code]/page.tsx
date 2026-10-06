@@ -9,6 +9,7 @@ import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
 import { tokenStore } from "../../lib/storage";
 import { useRoom } from "../../lib/useRoom";
+import { BRAND } from "../../brand";
 
 /**
  * The phone. Fully playable on its own: the question and options are always here,
@@ -56,7 +57,7 @@ export default function PlayPage() {
     <div className="stage" data-stage={stageOf(view.phase)}>
       <main className="shell phone">
         <header className="top">
-          <h1 className="logo small">Family Party</h1>
+          <h1 className="logo small">{BRAND}</h1>
           <span className="top-right">
           <ConnectionDot quality={quality} status={status} latencyMs={latencyMs} label={false} />
           <CopyText
@@ -66,7 +67,7 @@ export default function PlayPage() {
             label="el enlace de la sala"
             icon
             share={{
-              title: "Family Party",
+              title: BRAND,
               text: `¡Únete a la partida! Sala ${code}`,
               url: typeof window !== "undefined" ? `${window.location.origin}/play/${code}` : "",
             }}
