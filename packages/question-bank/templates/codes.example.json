@@ -1,0 +1,4 @@
+{
+  "_ayuda": "Copia este archivo a ~/.family-party/codes.json (fuera del repo y fuera de la carpeta de los CSV) y llena los códigos. Una entrada por pack id; mínimo 12 letras o dígitos. pack-sheet los toma por --id.",
+  "demo-privado": { "name": "Pack privado de prueba", "code": "" }
+}
