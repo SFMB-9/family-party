@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_COLUMNS, MAX_NAME_LENGTH, MAX_PLAYERS, initialState, reduce } from "./reducer";
+import { BOARD_COLUMNS, MAX_NAME_LENGTH, MAX_PLAYERS, initialState, ladder, reduce } from "./reducer";
 import { DEFAULT_RULES } from "./rules";
 import type { Rules } from "./types";
 import type { Category, GameState, Player, Question, ReduceResult } from "./types";
@@ -865,5 +865,38 @@ describe("SET_PICKS", () => {
   it("strips anything extra the caller attached", () => {
     const sneaky = { pack: "clasico", category: "Historia", correct: [0] } as ReturnType<typeof pick>;
     expect(ok(reduce(lobbyWith("ana"), { type: "SET_PICKS", picks: [sneaky] })).picks).toEqual([pick("Historia")]);
+  });
+});
+
+describe("ladder (dealing a column)", () => {
+  const at = (difficulty: number, id = `d${difficulty}-${n++}`): Question => ({ ...q("general"), id, difficulty: difficulty as 1 });
+
+  it("spreads a column over the difficulty bands and sorts it cheapest first", () => {
+    const pool = [at(1), at(1), at(1), at(2), at(3), at(3), at(4), at(5), at(5)];
+    expect(ladder(pool, 5, new Set()).map((x) => x.difficulty)).toEqual([1, 2, 3, 4, 5]);
+    expect(ladder(pool, 4, new Set()).map((x) => x.difficulty)).toEqual([1, 2, 4, 5]);
+    expect(ladder(pool, 3, new Set()).map((x) => x.difficulty)).toEqual([1, 3, 5]);
+  });
+
+  it("falls back to the nearest difficulty when a band is empty", () => {
+    const pool = [at(1), at(1), at(1), at(1), at(2)];
+    expect(ladder(pool, 4, new Set()).map((x) => x.difficulty)).toEqual([1, 1, 1, 2]);
+  });
+
+  it("prefers a fresh question of a nearby difficulty over a repeat of the exact one", () => {
+    const pool = [at(5, "seen-5"), at(1), at(2), at(3), at(4), at(4)];
+    expect(ladder(pool, 5, new Set(["seen-5"])).map((x) => x.id)).not.toContain("seen-5");
+    // …and still uses it when nothing fresh is left
+    expect(ladder(pool.slice(0, 5), 5, new Set(["seen-5"])).map((x) => x.id)).toContain("seen-5");
+  });
+
+  it("deals every board column as an ascending ladder", () => {
+    const bank = CATEGORIES.flatMap((c) => [1, 2, 3, 4, 5, 1, 2, 3].map((d) => ({ ...q(c), difficulty: d as 1 })));
+    const g = game(["ana", "beto", "caro", "dani"], bank);
+    for (let column = 0; column < BOARD_COLUMNS; column++) {
+      const values = g.board.filter((c) => c.column === column).map((c) => c.value);
+      expect(values).toEqual([...values].sort((a, b) => a - b));
+      expect(new Set(values).size).toBe(values.length); // four rows, four different values
+    }
   });
 });

@@ -50,7 +50,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -118,7 +118,7 @@
       "correct": [
         0
       ],
-      "difficulty": 3,
+      "difficulty": 4,
       "timeLimitSec": 25,
       "stealable": true
     },
@@ -136,6 +136,295 @@
         0
       ],
       "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-09",
+      "category": "Cultura general",
+      "text": "¿Cuántos colores tiene tradicionalmente el arcoíris?",
+      "options": [
+        "7",
+        "5",
+        "6",
+        "8"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-10",
+      "category": "Cultura general",
+      "text": "¿Quién escribió «Don Quijote de la Mancha»?",
+      "options": [
+        "Miguel de Cervantes",
+        "Lope de Vega",
+        "Francisco de Quevedo",
+        "Garcilaso de la Vega"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-11",
+      "category": "Cultura general",
+      "text": "¿En qué ciudad está el Museo del Louvre?",
+      "options": [
+        "París",
+        "Londres",
+        "Madrid",
+        "Roma"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-12",
+      "category": "Cultura general",
+      "text": "¿Quién escribió «Pedro Páramo»?",
+      "options": [
+        "Juan Rulfo",
+        "Carlos Fuentes",
+        "Octavio Paz",
+        "Juan José Arreola"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-13",
+      "category": "Cultura general",
+      "text": "¿Qué escritor mexicano ganó el Premio Nobel de Literatura en 1990?",
+      "options": [
+        "Octavio Paz",
+        "Carlos Fuentes",
+        "Juan Rulfo",
+        "José Emilio Pacheco"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-14",
+      "category": "Cultura general",
+      "text": "¿Cuántos minutos tiene un día?",
+      "options": [
+        "1440",
+        "1240",
+        "1400",
+        "1600"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-15",
+      "category": "Cultura general",
+      "text": "¿Qué número romano vale 50?",
+      "options": [
+        "L",
+        "C",
+        "D",
+        "X"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-16",
+      "category": "Cultura general",
+      "text": "¿Qué arquitecto diseñó la Sagrada Familia de Barcelona?",
+      "options": [
+        "Antoni Gaudí",
+        "Le Corbusier",
+        "Frank Lloyd Wright",
+        "Santiago Calatrava"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-17",
+      "category": "Cultura general",
+      "text": "¿Cuál es la moneda oficial de Japón?",
+      "options": [
+        "Yen",
+        "Won",
+        "Yuan",
+        "Rupia"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-18",
+      "category": "Cultura general",
+      "text": "¿Quién pintó el techo de la Capilla Sixtina?",
+      "options": [
+        "Miguel Ángel",
+        "Leonardo da Vinci",
+        "Rafael",
+        "Botticelli"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-19",
+      "category": "Cultura general",
+      "text": "¿Con cuántas piezas empieza cada jugador una partida de ajedrez?",
+      "options": [
+        "16",
+        "12",
+        "14",
+        "18"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-20",
+      "category": "Cultura general",
+      "text": "¿Qué muralista pintó «Sueño de una tarde dominical en la Alameda Central»?",
+      "options": [
+        "Diego Rivera",
+        "José Clemente Orozco",
+        "David Alfaro Siqueiros",
+        "Rufino Tamayo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-21",
+      "category": "Cultura general",
+      "text": "¿En qué idioma se escribió originalmente «El principito»?",
+      "options": [
+        "Francés",
+        "Inglés",
+        "Alemán",
+        "Italiano"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-22",
+      "category": "Cultura general",
+      "text": "¿Quién pintó «Las meninas»?",
+      "options": [
+        "Diego Velázquez",
+        "Francisco de Goya",
+        "El Greco",
+        "Bartolomé Murillo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-23",
+      "category": "Cultura general",
+      "text": "¿Qué escritor argentino escribió «El Aleph»?",
+      "options": [
+        "Jorge Luis Borges",
+        "Julio Cortázar",
+        "Ernesto Sabato",
+        "Adolfo Bioy Casares"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-24",
+      "category": "Cultura general",
+      "text": "¿Qué escritora mexicana escribió «Como agua para chocolate»?",
+      "options": [
+        "Laura Esquivel",
+        "Elena Poniatowska",
+        "Ángeles Mastretta",
+        "Rosario Castellanos"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cultura-general-25",
+      "category": "Cultura general",
+      "text": "¿En qué año se publicó la primera parte de «Don Quijote»?",
+      "options": [
+        "1605",
+        "1615",
+        "1547",
+        "1616"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -169,7 +458,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -220,7 +509,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -254,7 +543,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -272,6 +561,295 @@
         0
       ],
       "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-09",
+      "category": "Geografía",
+      "text": "¿Cuál es la montaña más alta del mundo sobre el nivel del mar?",
+      "options": [
+        "Everest",
+        "K2",
+        "Kilimanjaro",
+        "Aconcagua"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-10",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Japón?",
+      "options": [
+        "Tokio",
+        "Kioto",
+        "Osaka",
+        "Seúl"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-11",
+      "category": "Geografía",
+      "text": "¿Qué país tiene forma de bota?",
+      "options": [
+        "Italia",
+        "Grecia",
+        "Portugal",
+        "Chile"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-12",
+      "category": "Geografía",
+      "text": "¿Cuál es el desierto cálido más grande del mundo?",
+      "options": [
+        "Sahara",
+        "Gobi",
+        "Atacama",
+        "Kalahari"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-13",
+      "category": "Geografía",
+      "text": "¿Qué estado de México tiene la mayor superficie?",
+      "options": [
+        "Chihuahua",
+        "Sonora",
+        "Coahuila",
+        "Durango"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-14",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Brasil?",
+      "options": [
+        "Brasilia",
+        "Río de Janeiro",
+        "São Paulo",
+        "Salvador"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-15",
+      "category": "Geografía",
+      "text": "¿Con cuántos países comparte frontera terrestre México?",
+      "options": [
+        "3",
+        "2",
+        "4",
+        "5"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-16",
+      "category": "Geografía",
+      "text": "¿Cuál es el lago natural más grande de México?",
+      "options": [
+        "Lago de Chapala",
+        "Lago de Pátzcuaro",
+        "Lago de Cuitzeo",
+        "Lago de Catemaco"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-17",
+      "category": "Geografía",
+      "text": "¿En qué país están las ruinas de Petra?",
+      "options": [
+        "Jordania",
+        "Egipto",
+        "Turquía",
+        "Líbano"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-18",
+      "category": "Geografía",
+      "text": "¿Qué estrecho separa a Europa de África?",
+      "options": [
+        "Gibraltar",
+        "Bósforo",
+        "Magallanes",
+        "Ormuz"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-19",
+      "category": "Geografía",
+      "text": "¿Cuál es el país más poblado de América Latina?",
+      "options": [
+        "Brasil",
+        "México",
+        "Argentina",
+        "Colombia"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-20",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Nueva Zelanda?",
+      "options": [
+        "Wellington",
+        "Auckland",
+        "Christchurch",
+        "Sídney"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-21",
+      "category": "Geografía",
+      "text": "¿En qué estado de México está Chichén Itzá?",
+      "options": [
+        "Yucatán",
+        "Quintana Roo",
+        "Campeche",
+        "Chiapas"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-22",
+      "category": "Geografía",
+      "text": "¿Qué país tiene la única bandera nacional que no es rectangular?",
+      "options": [
+        "Nepal",
+        "Suiza",
+        "Bután",
+        "Vaticano"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-23",
+      "category": "Geografía",
+      "text": "¿En qué país está el salar de Uyuni?",
+      "options": [
+        "Bolivia",
+        "Chile",
+        "Perú",
+        "Argentina"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-24",
+      "category": "Geografía",
+      "text": "¿Cuál es la capital de Mongolia?",
+      "options": [
+        "Ulán Bator",
+        "Astaná",
+        "Biskek",
+        "Taskent"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "geografia-25",
+      "category": "Geografía",
+      "text": "¿Qué río atraviesa o bordea más países?",
+      "options": [
+        "Danubio",
+        "Nilo",
+        "Rin",
+        "Amazonas"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -390,7 +968,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -412,6 +990,312 @@
       "stealable": true
     },
     {
+      "id": "historia-09",
+      "category": "Historia",
+      "text": "¿En qué año se promulgó la Constitución mexicana vigente?",
+      "options": [
+        "1917",
+        "1857",
+        "1910",
+        "1929"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-10",
+      "category": "Historia",
+      "text": "¿En qué año comenzó la Revolución Mexicana?",
+      "options": [
+        "1910",
+        "1810",
+        "1917",
+        "1900"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-11",
+      "category": "Historia",
+      "text": "¿Quién fue la primera persona en pisar la Luna?",
+      "options": [
+        "Neil Armstrong",
+        "Buzz Aldrin",
+        "Yuri Gagarin",
+        "Michael Collins"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-12",
+      "category": "Historia",
+      "text": "¿En qué año llegó el ser humano a la Luna?",
+      "options": [
+        "1969",
+        "1965",
+        "1972",
+        "1961"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-13",
+      "category": "Historia",
+      "text": "¿Qué batalla se conmemora el 5 de mayo?",
+      "options": [
+        "Batalla de Puebla",
+        "Batalla de Celaya",
+        "Toma de Zacatecas",
+        "Batalla del Álamo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-14",
+      "category": "Historia",
+      "text": "¿Qué presidente mexicano expropió el petróleo en 1938?",
+      "options": [
+        "Lázaro Cárdenas",
+        "Plutarco Elías Calles",
+        "Manuel Ávila Camacho",
+        "Álvaro Obregón"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-15",
+      "category": "Historia",
+      "text": "¿Qué civilización construyó las pirámides de Giza?",
+      "options": [
+        "Egipcia",
+        "Sumeria",
+        "Persa",
+        "Griega"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-16",
+      "category": "Historia",
+      "text": "¿Quién fue el primer emperador de Roma?",
+      "options": [
+        "Augusto",
+        "Julio César",
+        "Nerón",
+        "Calígula"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-17",
+      "category": "Historia",
+      "text": "¿En qué año comenzó la Primera Guerra Mundial?",
+      "options": [
+        "1914",
+        "1918",
+        "1905",
+        "1939"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-18",
+      "category": "Historia",
+      "text": "¿Qué trasatlántico se hundió en 1912 tras chocar con un iceberg?",
+      "options": [
+        "Titanic",
+        "Lusitania",
+        "Britannic",
+        "Mayflower"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-19",
+      "category": "Historia",
+      "text": "¿Quién encabezó la entrada del Ejército Trigarante a la Ciudad de México en 1821?",
+      "options": [
+        "Agustín de Iturbide",
+        "Miguel Hidalgo",
+        "José María Morelos",
+        "Ignacio Allende"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-20",
+      "category": "Historia",
+      "text": "¿Qué reina gobernó el Reino Unido durante más de 70 años?",
+      "options": [
+        "Isabel II",
+        "Victoria",
+        "Ana",
+        "María I"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-21",
+      "category": "Historia",
+      "text": "¿Cuál era la capital del Imperio mexica?",
+      "options": [
+        "Tenochtitlan",
+        "Teotihuacan",
+        "Tula",
+        "Texcoco"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-22",
+      "category": "Historia",
+      "text": "¿Quién fue el último tlatoani mexica?",
+      "options": [
+        "Cuauhtémoc",
+        "Moctezuma II",
+        "Cuitláhuac",
+        "Axayácatl"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-23",
+      "category": "Historia",
+      "text": "¿En qué año ocurrió la Decena Trágica?",
+      "options": [
+        "1913",
+        "1910",
+        "1914",
+        "1917"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-24",
+      "category": "Historia",
+      "text": "¿En qué año cayó Constantinopla ante los otomanos?",
+      "options": [
+        "1453",
+        "1492",
+        "1204",
+        "1517"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-25",
+      "category": "Historia",
+      "text": "¿Con qué tratado de 1848 cedió México más de la mitad de su territorio a Estados Unidos?",
+      "options": [
+        "Tratado de Guadalupe Hidalgo",
+        "Tratado de Córdoba",
+        "Tratado de Velasco",
+        "Tratado de La Mesilla"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "historia-26",
+      "category": "Historia",
+      "text": "Según la tradición, ¿en qué año se fundó México-Tenochtitlan?",
+      "options": [
+        "1325",
+        "1521",
+        "1428",
+        "1250"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
       "id": "ciencia-01",
       "category": "Ciencia",
       "text": "¿Cuál es el símbolo químico del oro?",
@@ -424,7 +1308,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -458,7 +1342,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -565,6 +1449,278 @@
       "stealable": true
     },
     {
+      "id": "ciencia-10",
+      "category": "Ciencia",
+      "text": "¿Cuál es la fórmula química del agua?",
+      "options": [
+        "H₂O",
+        "CO₂",
+        "O₂",
+        "H₂O₂"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-11",
+      "category": "Ciencia",
+      "text": "¿Cuántos planetas tiene el sistema solar?",
+      "options": [
+        "8",
+        "9",
+        "7",
+        "10"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-12",
+      "category": "Ciencia",
+      "text": "¿Qué gas es el más abundante en la atmósfera terrestre?",
+      "options": [
+        "Nitrógeno",
+        "Oxígeno",
+        "Dióxido de carbono",
+        "Argón"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-13",
+      "category": "Ciencia",
+      "text": "¿Cuál es el hueso más largo del cuerpo humano?",
+      "options": [
+        "Fémur",
+        "Tibia",
+        "Húmero",
+        "Peroné"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-14",
+      "category": "Ciencia",
+      "text": "¿Quién propuso la teoría de la evolución por selección natural?",
+      "options": [
+        "Charles Darwin",
+        "Gregor Mendel",
+        "Louis Pasteur",
+        "Isaac Newton"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-15",
+      "category": "Ciencia",
+      "text": "¿Cuántas cavidades tiene el corazón humano?",
+      "options": [
+        "4",
+        "2",
+        "3",
+        "6"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-16",
+      "category": "Ciencia",
+      "text": "¿Cuál es la velocidad aproximada de la luz en el vacío?",
+      "options": [
+        "300 000 km/s",
+        "30 000 km/s",
+        "3 000 km/s",
+        "3 000 000 km/s"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-17",
+      "category": "Ciencia",
+      "text": "¿Qué elemento químico tiene el símbolo Fe?",
+      "options": [
+        "Hierro",
+        "Flúor",
+        "Fósforo",
+        "Fermio"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-18",
+      "category": "Ciencia",
+      "text": "¿Qué tipo de sangre se considera donante universal?",
+      "options": [
+        "O negativo",
+        "AB positivo",
+        "A negativo",
+        "O positivo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-19",
+      "category": "Ciencia",
+      "text": "¿Cuál es la estrella más cercana a la Tierra?",
+      "options": [
+        "El Sol",
+        "Próxima Centauri",
+        "Sirio",
+        "Alfa Centauri"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-20",
+      "category": "Ciencia",
+      "text": "¿Qué científica ganó dos Premios Nobel, uno de Física y otro de Química?",
+      "options": [
+        "Marie Curie",
+        "Rosalind Franklin",
+        "Lise Meitner",
+        "Ada Lovelace"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-21",
+      "category": "Ciencia",
+      "text": "¿Cuál es el planeta más cercano al Sol?",
+      "options": [
+        "Mercurio",
+        "Venus",
+        "Marte",
+        "Tierra"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-22",
+      "category": "Ciencia",
+      "text": "¿Cuál es el elemento más abundante del universo?",
+      "options": [
+        "Hidrógeno",
+        "Helio",
+        "Oxígeno",
+        "Carbono"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-23",
+      "category": "Ciencia",
+      "text": "¿Cuál es el número atómico del carbono?",
+      "options": [
+        "6",
+        "12",
+        "8",
+        "4"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-24",
+      "category": "Ciencia",
+      "text": "¿Qué científico mexicano ganó el Premio Nobel de Química en 1995?",
+      "options": [
+        "Mario Molina",
+        "Rodolfo Neri Vela",
+        "Guillermo Haro",
+        "Luis E. Miramontes"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "ciencia-25",
+      "category": "Ciencia",
+      "text": "¿En qué planeta un día dura más que su año?",
+      "options": [
+        "Venus",
+        "Mercurio",
+        "Júpiter",
+        "Neptuno"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
       "id": "musica-01",
       "category": "Música",
       "text": "¿Quién compuso la Novena Sinfonía, la del «Himno a la alegría»?",
@@ -594,7 +1750,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -611,7 +1767,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -628,7 +1784,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 4,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -645,7 +1801,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -696,8 +1852,280 @@
       "correct": [
         0
       ],
-      "difficulty": 3,
+      "difficulty": 5,
       "timeLimitSec": 25,
+      "stealable": true
+    },
+    {
+      "id": "musica-09",
+      "category": "Música",
+      "text": "¿Qué banda británica grabó «Bohemian Rhapsody»?",
+      "options": [
+        "Queen",
+        "The Beatles",
+        "The Rolling Stones",
+        "Pink Floyd"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-10",
+      "category": "Música",
+      "text": "¿De qué ciudad inglesa eran los Beatles?",
+      "options": [
+        "Liverpool",
+        "Londres",
+        "Mánchester",
+        "Birmingham"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-11",
+      "category": "Música",
+      "text": "¿Qué cantante es conocido como «el Divo de Juárez»?",
+      "options": [
+        "Juan Gabriel",
+        "José José",
+        "Vicente Fernández",
+        "Luis Miguel"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-12",
+      "category": "Música",
+      "text": "¿A quién llamaban «el Príncipe de la Canción»?",
+      "options": [
+        "José José",
+        "Juan Gabriel",
+        "Luis Miguel",
+        "Armando Manzanero"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-13",
+      "category": "Música",
+      "text": "¿Cuántas teclas tiene un piano estándar?",
+      "options": [
+        "88",
+        "76",
+        "72",
+        "96"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-14",
+      "category": "Música",
+      "text": "¿Qué compositor mexicano escribió «Huapango»?",
+      "options": [
+        "José Pablo Moncayo",
+        "Carlos Chávez",
+        "Silvestre Revueltas",
+        "Agustín Lara"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-15",
+      "category": "Música",
+      "text": "¿Qué instrumento tocaba principalmente Jimi Hendrix?",
+      "options": [
+        "Guitarra eléctrica",
+        "Bajo",
+        "Batería",
+        "Teclado"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-16",
+      "category": "Música",
+      "text": "¿Quién compuso la ópera «La flauta mágica»?",
+      "options": [
+        "Wolfgang Amadeus Mozart",
+        "Joseph Haydn",
+        "Richard Wagner",
+        "Giuseppe Verdi"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-17",
+      "category": "Música",
+      "text": "¿De qué país es originario el tango?",
+      "options": [
+        "Argentina",
+        "España",
+        "Cuba",
+        "Colombia"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-18",
+      "category": "Música",
+      "text": "¿Qué cantante colombiana grabó «Hips Don't Lie»?",
+      "options": [
+        "Shakira",
+        "Karol G",
+        "Fanny Lú",
+        "Greeicy"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-19",
+      "category": "Música",
+      "text": "¿Qué banda mexicana grabó «Afuera» y «La negra Tomasa»?",
+      "options": [
+        "Caifanes",
+        "Café Tacvba",
+        "Maná",
+        "El Tri"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-20",
+      "category": "Música",
+      "text": "¿Qué banda mexicana grabó «Eres» y «Las flores»?",
+      "options": [
+        "Café Tacvba",
+        "Caifanes",
+        "Maná",
+        "Molotov"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-21",
+      "category": "Música",
+      "text": "¿Quién compuso el bolero «Bésame mucho»?",
+      "options": [
+        "Consuelo Velázquez",
+        "Agustín Lara",
+        "Armando Manzanero",
+        "Álvaro Carrillo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-22",
+      "category": "Música",
+      "text": "¿Cuántas sinfonías completó Beethoven?",
+      "options": [
+        "9",
+        "7",
+        "10",
+        "12"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-23",
+      "category": "Música",
+      "text": "¿Quién compuso el «Bolero» orquestal de 1928?",
+      "options": [
+        "Maurice Ravel",
+        "Claude Debussy",
+        "Erik Satie",
+        "Manuel de Falla"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "musica-24",
+      "category": "Música",
+      "text": "¿Qué compositor mexicano escribió «Sensemayá»?",
+      "options": [
+        "Silvestre Revueltas",
+        "Carlos Chávez",
+        "Manuel M. Ponce",
+        "José Pablo Moncayo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
+      "timeLimitSec": 20,
       "stealable": true
     },
     {
@@ -849,7 +2277,7 @@
       "correct": [
         0
       ],
-      "difficulty": 2,
+      "difficulty": 3,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -934,7 +2362,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -952,6 +2380,295 @@
         0
       ],
       "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-09",
+      "category": "Deportes",
+      "text": "¿Cuántos jugadores tiene un equipo de baloncesto en la cancha?",
+      "options": [
+        "5",
+        "6",
+        "7",
+        "4"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-10",
+      "category": "Deportes",
+      "text": "¿En qué deporte se usa un «green»?",
+      "options": [
+        "Golf",
+        "Tenis",
+        "Polo",
+        "Críquet"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-11",
+      "category": "Deportes",
+      "text": "¿Cuántos sets hay que ganar para llevarse un partido masculino de Grand Slam?",
+      "options": [
+        "3",
+        "2",
+        "4",
+        "5"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-12",
+      "category": "Deportes",
+      "text": "¿Qué piloto mexicano corrió en Fórmula 1 para Red Bull Racing?",
+      "options": [
+        "Sergio Pérez",
+        "Esteban Gutiérrez",
+        "Pedro Rodríguez",
+        "Ricardo Rodríguez"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-13",
+      "category": "Deportes",
+      "text": "¿Cuánto mide un maratón?",
+      "options": [
+        "42.195 km",
+        "40 km",
+        "41.5 km",
+        "45 km"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-14",
+      "category": "Deportes",
+      "text": "¿Qué boxeador mexicano es conocido como «el Canelo»?",
+      "options": [
+        "Saúl Álvarez",
+        "Julio César Chávez",
+        "Juan Manuel Márquez",
+        "Érik Morales"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-15",
+      "category": "Deportes",
+      "text": "¿En qué ciudad se celebraron los Juegos Olímpicos de 1968?",
+      "options": [
+        "Ciudad de México",
+        "Múnich",
+        "Tokio",
+        "Los Ángeles"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-16",
+      "category": "Deportes",
+      "text": "¿Cuántos hoyos tiene un recorrido estándar de golf?",
+      "options": [
+        "18",
+        "9",
+        "12",
+        "21"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-17",
+      "category": "Deportes",
+      "text": "¿En qué deporte se disputa la Serie Mundial?",
+      "options": [
+        "Béisbol",
+        "Fútbol americano",
+        "Baloncesto",
+        "Hockey sobre hielo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-18",
+      "category": "Deportes",
+      "text": "¿Qué basquetbolista es apodado «King James»?",
+      "options": [
+        "LeBron James",
+        "Kobe Bryant",
+        "Michael Jordan",
+        "Stephen Curry"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-19",
+      "category": "Deportes",
+      "text": "¿Cuántos jugadores por equipo hay en la cancha en voleibol?",
+      "options": [
+        "6",
+        "5",
+        "7",
+        "4"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-20",
+      "category": "Deportes",
+      "text": "¿Cuántos puntos vale un touchdown, sin contar el punto extra?",
+      "options": [
+        "6",
+        "7",
+        "3",
+        "5"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-21",
+      "category": "Deportes",
+      "text": "¿Qué tenista ha ganado más veces Roland Garros?",
+      "options": [
+        "Rafael Nadal",
+        "Novak Djokovic",
+        "Roger Federer",
+        "Björn Borg"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-22",
+      "category": "Deportes",
+      "text": "¿Qué futbolista mexicano del Real Madrid era apodado «Hugol»?",
+      "options": [
+        "Hugo Sánchez",
+        "Javier Hernández",
+        "Rafael Márquez",
+        "Cuauhtémoc Blanco"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-23",
+      "category": "Deportes",
+      "text": "¿En qué país se inventó el voleibol?",
+      "options": [
+        "Estados Unidos",
+        "Brasil",
+        "Japón",
+        "Italia"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-24",
+      "category": "Deportes",
+      "text": "¿Cuántos jugadores por equipo hay en la cancha en el rugby union?",
+      "options": [
+        "15",
+        "13",
+        "11",
+        "12"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "deportes-25",
+      "category": "Deportes",
+      "text": "¿Quién fue la primera mexicana en ganar una medalla de oro olímpica?",
+      "options": [
+        "Soraya Jiménez",
+        "Ana Guevara",
+        "María del Rosario Espinoza",
+        "Paola Espinosa"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -986,7 +2703,7 @@
       "correct": [
         0
       ],
-      "difficulty": 1,
+      "difficulty": 2,
       "timeLimitSec": 20,
       "stealable": true
     },
@@ -1003,7 +2720,7 @@
       "correct": [
         0
       ],
-      "difficulty": 3,
+      "difficulty": 4,
       "timeLimitSec": 25,
       "stealable": true
     },
@@ -1021,6 +2738,244 @@
         0
       ],
       "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-12",
+      "category": "Cine y TV",
+      "text": "¿Cómo se llama el león protagonista de «El rey león»?",
+      "options": [
+        "Simba",
+        "Mufasa",
+        "Scar",
+        "Nala"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-13",
+      "category": "Cine y TV",
+      "text": "¿Qué director mexicano dirigió «La forma del agua»?",
+      "options": [
+        "Guillermo del Toro",
+        "Alfonso Cuarón",
+        "Alejandro G. Iñárritu",
+        "Luis Estrada"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-14",
+      "category": "Cine y TV",
+      "text": "¿En qué serie aparece el profesor de química Walter White?",
+      "options": [
+        "Breaking Bad",
+        "Ozark",
+        "The Wire",
+        "Narcos"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-15",
+      "category": "Cine y TV",
+      "text": "¿Cómo se llama el robot de Pixar que limpia una Tierra abandonada?",
+      "options": [
+        "WALL·E",
+        "EVE",
+        "Baymax",
+        "R2-D2"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-16",
+      "category": "Cine y TV",
+      "text": "¿Qué actor interpretó a Iron Man en el Universo Cinematográfico de Marvel?",
+      "options": [
+        "Robert Downey Jr.",
+        "Chris Evans",
+        "Chris Hemsworth",
+        "Mark Ruffalo"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-17",
+      "category": "Cine y TV",
+      "text": "¿Qué personaje de Roberto Gómez Bolaños tiene antenitas de vinil?",
+      "options": [
+        "El Chapulín Colorado",
+        "El Chavo del 8",
+        "El Doctor Chapatín",
+        "Chómpiras"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 1,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-18",
+      "category": "Cine y TV",
+      "text": "¿Qué película de Alejandro G. Iñárritu ganó el Óscar a Mejor Película?",
+      "options": [
+        "Birdman",
+        "El renacido",
+        "Babel",
+        "Amores perros"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-19",
+      "category": "Cine y TV",
+      "text": "¿Cuántas películas forman la saga principal de «Star Wars», la de los Skywalker?",
+      "options": [
+        "9",
+        "6",
+        "8",
+        "12"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-20",
+      "category": "Cine y TV",
+      "text": "¿En qué ciudad se desarrolla la serie «Friends»?",
+      "options": [
+        "Nueva York",
+        "Los Ángeles",
+        "Chicago",
+        "Boston"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 2,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-21",
+      "category": "Cine y TV",
+      "text": "¿Qué actriz nacida en la Ciudad de México ganó el Óscar por «12 años de esclavitud»?",
+      "options": [
+        "Lupita Nyong'o",
+        "Salma Hayek",
+        "Yalitza Aparicio",
+        "Eiza González"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-22",
+      "category": "Cine y TV",
+      "text": "¿Quién dirigió «Psicosis» (1960)?",
+      "options": [
+        "Alfred Hitchcock",
+        "Stanley Kubrick",
+        "Orson Welles",
+        "Billy Wilder"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-23",
+      "category": "Cine y TV",
+      "text": "¿Quién interpretó al Joker en «Batman: El caballero de la noche» (2008)?",
+      "options": [
+        "Heath Ledger",
+        "Joaquin Phoenix",
+        "Jared Leto",
+        "Jack Nicholson"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 3,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-24",
+      "category": "Cine y TV",
+      "text": "¿En qué año se estrenó la primera «Toy Story»?",
+      "options": [
+        "1995",
+        "1999",
+        "1991",
+        "2001"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 4,
+      "timeLimitSec": 20,
+      "stealable": true
+    },
+    {
+      "id": "cine-y-tv-25",
+      "category": "Cine y TV",
+      "text": "¿Qué película ganó el primer Óscar a Mejor Película?",
+      "options": [
+        "Alas",
+        "Lo que el viento se llevó",
+        "Ciudadano Kane",
+        "Casablanca"
+      ],
+      "correct": [
+        0
+      ],
+      "difficulty": 5,
       "timeLimitSec": 20,
       "stealable": true
     }
