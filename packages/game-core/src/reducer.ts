@@ -172,7 +172,7 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
     if (columns.length === 0) return fail("NOT_ENOUGH_QUESTIONS");
 
     columns.forEach((category, column) => {
-      ladder(freshFirst(byCategory.get(category)!), rows, seen).forEach((q, row) => deal(q, column, `${category}-${row}`));
+      ladder(freshFirst(byCategory.get(category)!), rows, seen, rng).forEach((q, row) => deal(q, column, `${category}-${row}`));
     });
   }
 
@@ -185,16 +185,18 @@ function start(state: GameState, action: ActionOf<"START">): ReduceResult {
 }
 
 /**
- * A column as a value ladder, like the 2023 board: one question per difficulty band, spread over
- * 1–5 (4 rows → 1, 2, 4, 5 … 5 rows → 1 to 5), then sorted cheapest first. For each band it takes
- * the first unseen question of that difficulty, else the nearest one; a repeat only when nothing
- * fresh is left. `pool` comes shuffled, so ties keep the deal random.
+ * A column as a value ladder, like the 2023 board: difficulties 1–5 split into one slice per row,
+ * a random target inside each slice (5 rows → exactly 1 to 5; 1 row → anything from 1 to 5, so a
+ * one-row board still mixes values), then sorted cheapest first. For each target it takes the first
+ * unseen question of that difficulty, else the nearest one; a repeat only when nothing fresh is left.
+ * `pool` comes shuffled, so ties keep the deal random.
  */
-export function ladder(pool: Question[], rows: number, seen: Set<QuestionId>): Question[] {
+export function ladder(pool: Question[], rows: number, seen: Set<QuestionId>, random: () => number = Math.random): Question[] {
   const left = [...pool];
   const picked: Question[] = [];
+  const slice = 5 / rows; // difficulties as the range [0.5, 5.5)
   for (let row = 0; row < rows && left.length > 0; row++) {
-    const target = rows === 1 ? 1 : Math.round(1 + (row * 4) / (rows - 1));
+    const target = Math.min(5, Math.max(1, Math.round(0.5 + (row + random()) * slice)));
     let best = 0;
     const score = (q: Question) => (seen.has(q.id) ? 10 : 0) + Math.abs(q.difficulty - target);
     for (let i = 1; i < left.length; i++) if (score(left[i]!) < score(left[best]!)) best = i;

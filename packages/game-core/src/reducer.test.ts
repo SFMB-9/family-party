@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_COLUMNS, MAX_NAME_LENGTH, MAX_PLAYERS, initialState, ladder, reduce } from "./reducer";
+import { createRng } from "./random";
 import { DEFAULT_RULES } from "./rules";
 import type { Rules } from "./types";
 import type { Category, GameState, Player, Question, ReduceResult } from "./types";
@@ -873,21 +874,31 @@ describe("ladder (dealing a column)", () => {
 
   it("spreads a column over the difficulty bands and sorts it cheapest first", () => {
     const pool = [at(1), at(1), at(1), at(2), at(3), at(3), at(4), at(5), at(5)];
-    expect(ladder(pool, 5, new Set()).map((x) => x.difficulty)).toEqual([1, 2, 3, 4, 5]);
-    expect(ladder(pool, 4, new Set()).map((x) => x.difficulty)).toEqual([1, 2, 4, 5]);
-    expect(ladder(pool, 3, new Set()).map((x) => x.difficulty)).toEqual([1, 3, 5]);
+    expect(ladder(pool, 5, new Set(), createRng(7)).map((x) => x.difficulty)).toEqual([1, 2, 3, 4, 5]);
+    for (let seed = 0; seed < 50; seed++) {
+      const four = ladder(pool, 4, new Set(), createRng(seed)).map((x) => x.difficulty);
+      expect(four).toEqual([...four].sort());
+      expect(four[0]).toBeLessThanOrEqual(2);
+      expect(four[3]).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it("a one-row board still mixes values instead of always taking the easiest", () => {
+    const pool = [1, 1, 1, 2, 2, 3, 3, 4, 5].map((d) => at(d));
+    const values = new Set(Array.from({ length: 40 }, (_, seed) => ladder(pool, 1, new Set(), createRng(seed))[0]!.difficulty));
+    expect(values.size).toBeGreaterThanOrEqual(4);
   });
 
   it("falls back to the nearest difficulty when a band is empty", () => {
     const pool = [at(1), at(1), at(1), at(1), at(2)];
-    expect(ladder(pool, 4, new Set()).map((x) => x.difficulty)).toEqual([1, 1, 1, 2]);
+    expect(ladder(pool, 4, new Set(), createRng(3)).map((x) => x.difficulty)).toEqual([1, 1, 1, 2]);
   });
 
   it("prefers a fresh question of a nearby difficulty over a repeat of the exact one", () => {
     const pool = [at(5, "seen-5"), at(1), at(2), at(3), at(4), at(4)];
-    expect(ladder(pool, 5, new Set(["seen-5"])).map((x) => x.id)).not.toContain("seen-5");
+    expect(ladder(pool, 5, new Set(["seen-5"]), createRng(1)).map((x) => x.id)).not.toContain("seen-5");
     // …and still uses it when nothing fresh is left
-    expect(ladder(pool.slice(0, 5), 5, new Set(["seen-5"])).map((x) => x.id)).toContain("seen-5");
+    expect(ladder(pool.slice(0, 5), 5, new Set(["seen-5"]), createRng(1)).map((x) => x.id)).toContain("seen-5");
   });
 
   it("deals every board column as an ascending ladder", () => {
@@ -896,7 +907,7 @@ describe("ladder (dealing a column)", () => {
     for (let column = 0; column < BOARD_COLUMNS; column++) {
       const values = g.board.filter((c) => c.column === column).map((c) => c.value);
       expect(values).toEqual([...values].sort((a, b) => a - b));
-      expect(new Set(values).size).toBe(values.length); // four rows, four different values
+      expect(new Set(values).size).toBeGreaterThanOrEqual(3); // a spread, not four $100s
     }
   });
 });
