@@ -6,6 +6,7 @@ import { isRoomCode, type ServerMessage } from "@family-party/protocol";
 import { describeError } from "./lib/errors";
 import { tokenStore } from "./lib/storage";
 import { NerdsButton } from "./nerds";
+import { BRAND } from "./brand";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL;
 
@@ -52,7 +53,7 @@ export default function Home() {
     <div className="stage" data-stage="board">
     <main className="shell home">
       <header className="hero">
-        <h1 className="logo big">Family Party</h1>
+        <h1 className="logo big">{BRAND}</h1>
         <p className="tagline">Trivia en familia, desde el celular</p>
       </header>
 

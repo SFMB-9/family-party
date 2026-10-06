@@ -1,7 +1,8 @@
 import { ImageResponse } from "next/og";
 import { CardRow, OG_SIZE, ogFonts } from "./og/card";
+import { BRAND } from "./brand";
 
-export const alt = "Family Party: trivia en familia, desde el celular";
+export const alt = `${BRAND}: trivia en familia, desde el celular`;
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
@@ -21,7 +22,7 @@ export default async function Image() {
           color: "#f2f2f2",
         }}
       >
-        <div style={{ display: "flex", fontFamily: "Milanes Pixel", fontSize: 120 }}>FAMILY PARTY</div>
+        <div style={{ display: "flex", fontFamily: "Milanes Pixel", fontSize: 120 }}>{BRAND.toUpperCase()}</div>
         <div style={{ display: "flex", fontFamily: "Jersey 10", fontSize: 56, color: "#ffcf4a" }}>
           Trivia en familia, desde el celular
         </div>

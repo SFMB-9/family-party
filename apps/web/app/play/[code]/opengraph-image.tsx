@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
 import { isRoomCode } from "@family-party/protocol";
 import { OG_SIZE, ogFonts } from "../../og/card";
+import { BRAND } from "../../brand";
 
-export const alt = "Únete a la partida en Family Party";
+export const alt = `Únete a la partida en ${BRAND}`;
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
@@ -28,7 +29,7 @@ export default async function Image({ params }: { params: Promise<{ code: string
           color: "#f2f2f2",
         }}
       >
-        <div style={{ display: "flex", fontFamily: "Milanes Pixel", fontSize: 48, color: "#b9c2bf" }}>FAMILY PARTY</div>
+        <div style={{ display: "flex", fontFamily: "Milanes Pixel", fontSize: 48, color: "#b9c2bf" }}>{BRAND.toUpperCase()}</div>
         <div style={{ display: "flex", fontFamily: "Milanes Pixel", fontSize: 72 }}>
           {code ? "ÚNETE A LA SALA" : "ÚNETE A LA PARTIDA"}
         </div>

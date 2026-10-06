@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { BRAND } from "./brand";
 
 /** Vercel exposes the production domain at build time; locally, previews point at localhost. */
 const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -11,11 +12,11 @@ const description = "Trivia en familia, desde el celular. Una pantalla para todo
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: "Family Party", template: "%s · Family Party" },
+  title: { default: BRAND, template: `%s · ${BRAND}` },
   description,
-  applicationName: "Family Party",
-  openGraph: { type: "website", siteName: "Family Party", locale: "es_MX", title: "Family Party", description },
-  twitter: { card: "summary_large_image", title: "Family Party", description },
+  applicationName: BRAND,
+  openGraph: { type: "website", siteName: BRAND, locale: "es_MX", title: BRAND, description },
+  twitter: { card: "summary_large_image", title: BRAND, description },
 };
 
 export const viewport: Viewport = {
