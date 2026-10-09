@@ -77,6 +77,16 @@ data "aws_iam_policy_document" "apply" {
     resources = ["arn:aws:iam::${local.account_id}:role/family-party-*"]
   }
   statement {
+    sid       = "AlertsTopic" # SNS topic + email subscription for alarms (subscription ARNs start with the topic's)
+    actions   = ["sns:*"]
+    resources = ["arn:aws:sns:${local.region}:${local.account_id}:family-party-*"]
+  }
+  statement {
+    sid       = "Alarms"
+    actions   = ["cloudwatch:PutMetricAlarm", "cloudwatch:DeleteAlarms", "cloudwatch:TagResource", "cloudwatch:UntagResource"]
+    resources = ["arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:family-party-*"]
+  }
+  statement {
     sid       = "Budgets"
     actions   = ["budgets:*"]
     resources = ["arn:aws:budgets::${local.account_id}:budget/family-party-*"]

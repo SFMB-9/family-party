@@ -58,6 +58,17 @@ pnpm --filter @family-party/web dev
 
 Open the app on a laptop to host, then join from a phone on the same network.
 
+## Operations
+
+- **Cost cap:** the WebSocket stage throttles at 20 messages/s (burst 50), and only API Gateway can invoke the Lambda, so that also caps invocations. A $5/month budget emails at 80% spent and 100% forecast.
+- **Fast alerts:** CloudWatch alarms email through SNS when traffic passes 30,000 messages/hour or the Lambda throws more than 10 errors in 5 minutes (`infra/live/alerts.tf`). Billing data lags a day; these arrive within minutes.
+- **Kill switch:** stop all traffic in seconds by dropping the stage throttle to zero. The next `terraform apply` restores it.
+  ```sh
+  API=$(aws apigatewayv2 get-apis --query "Items[?Name=='family-party-ws'].ApiId" --output text --profile family-party)
+  aws apigatewayv2 update-stage --api-id "$API" --stage-name dev \
+    --default-route-settings ThrottlingBurstLimit=0,ThrottlingRateLimit=0 --profile family-party
+  ```
+
 ## How this was built
 
 The game comes from a Unity version I designed for my family in 2023. This rebuild was paired with Claude: it drafted most of the code, and I made the design, architecture and security decisions and reviewed every change before it shipped.
