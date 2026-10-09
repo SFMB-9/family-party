@@ -701,6 +701,85 @@ describe("after the game", () => {
   });
 });
 
+
+// ---- late join ----
+describe("late join", () => {
+  const join = (s: GameState, id: string, name = id) => reduce(s, { type: "JOIN", player: { id, name } });
+  const leave = (s: GameState, playerId: string) => reduce(s, { type: "LEAVE", playerId, at: 0 });
+  /** Ends the game right away: the podium without playing every card. */
+  const over = (s: GameState) => ok(reduce(s, { type: "END" }));
+
+  it("mid-game, a newcomer waits in line instead of being turned away", () => {
+    const s = ok(join(game(["ana", "beto"]), "zoe"));
+    expect(s.waiting).toEqual([player("zoe")]);
+    expect(s.players.map((p) => p.id)).toEqual(["ana", "beto"]);
+    expect(s.scores).not.toHaveProperty("zoe");
+  });
+
+  it("on the podium, too", () => {
+    expect(ok(join(over(game(["ana"])), "zoe")).waiting).toEqual([player("zoe")]);
+  });
+
+  it("never waits in the lobby, and nobody joins a closed room", () => {
+    expect(ok(join(lobbyWith("ana"), "zoe")).waiting).toEqual([]);
+    const closed = ok(reduce(game(["ana"]), { type: "CLOSE" }));
+    expect(join(closed, "zoe")).toEqual({ ok: false, error: "WRONG_PHASE" });
+  });
+
+  it("checks names against players and the line", () => {
+    const s = ok(join(game(["ana"]), "zoe", "Zoe"));
+    expect(join(s, "x", "ANA")).toEqual({ ok: false, error: "NAME_TAKEN" });
+    expect(join(s, "y", "zoe")).toEqual({ ok: false, error: "NAME_TAKEN" });
+    expect(join(s, "zoe")).toEqual({ ok: false, error: "ALREADY_JOINED" });
+    expect(join(s, "z", "  ")).toEqual({ ok: false, error: "INVALID_NAME" });
+  });
+
+  it("counts the line toward the room limit, but not players who left", () => {
+    const ids = Array.from({ length: MAX_PLAYERS - 1 }, (_, i) => `p${i}`);
+    const big = CATEGORIES.flatMap((c) => Array.from({ length: 20 }, () => q(c)));
+    const s = ok(join(game(ids, big), "zoe"));
+    expect(join(s, "late")).toEqual({ ok: false, error: "ROOM_FULL" });
+    expect(ok(join(ok(leave(s, "p0")), "late")).waiting.map((p) => p.id)).toEqual(["zoe", "late"]);
+  });
+
+  it("LEAVE takes someone out of the line", () => {
+    const s = ok(leave(ok(join(game(["ana"]), "zoe")), "zoe"));
+    expect(s.waiting).toEqual([]);
+    expect(s.left).toEqual([]);
+  });
+
+  it("REMATCH seats the line after the kept players, at 0", () => {
+    let s = ok(join(game(["ana", "beto"]), "zoe"));
+    s = ok(join(s, "yuri"));
+    s = ok(reduce(over(s), { type: "REMATCH", keep: ["ana", "beto", "zoe", "yuri"] }));
+    expect(s.players.map((p) => p.id)).toEqual(["ana", "beto", "zoe", "yuri"]);
+    expect(s.scores).toEqual({ ana: 0, beto: 0, zoe: 0, yuri: 0 });
+    expect(s.waiting).toEqual([]);
+    expect(s.phase).toEqual({ kind: "lobby" });
+  });
+
+  it("REMATCH skips anyone in line who is no longer connected", () => {
+    const s = ok(join(game(["ana"]), "zoe"));
+    const lobby = ok(reduce(over(s), { type: "REMATCH", keep: ["ana"] }));
+    expect(lobby.players.map((p) => p.id)).toEqual(["ana"]);
+    expect(lobby.waiting).toEqual([]);
+  });
+
+  it("the waiting player gets a turn in the next game", () => {
+    let s = ok(join(game(["ana"]), "zoe"));
+    s = ok(reduce(over(s), { type: "REMATCH", keep: ["ana", "zoe"] }));
+    s = ok(reduce(s, { type: "START", questions: bank, seed: 1 }));
+    expect(s.players.map((p) => p.id).sort()).toEqual(["ana", "zoe"]);
+  });
+
+  it("a waiting player can't ask for another round or play", () => {
+    const s = ok(join(game(["ana"]), "zoe"));
+    const card = s.board[0]!;
+    expect(pick(s, "zoe", card.id)).toEqual({ ok: false, error: "NOT_YOUR_TURN" });
+    expect(reduce(over(s), { type: "ENCORE", playerId: "zoe" })).toEqual({ ok: false, error: "UNKNOWN_PLAYER" });
+  });
+});
+
 // ---- house rules ----
 describe("rules", () => {
   const timed = bank.map((x) => ({ ...x, timeLimitMs: 20_000 }));

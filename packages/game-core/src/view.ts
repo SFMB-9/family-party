@@ -55,6 +55,7 @@ export function publicView(state: GameState): PublicState {
     rules: state.rules,
     picks: state.picks,
     left: state.left,
+    waiting: state.waiting,
   };
 }
 

@@ -419,6 +419,27 @@ describe("after the game", () => {
     expect(stateOf("beto-again").you).toEqual({ role: "viewer" });
   });
 
+  it("a latecomer waits in line, keeps their seat on reconnect, and plays after Otra ronda", async () => {
+    const { code } = await createRoom();
+    const ana = await joinAs("ana", code, "Ana");
+    await send("host", { t: "start" });
+
+    const zoe = await joinAs("zoe", code, "Zoe");
+    expect(stateOf("host").view.waiting.map((p) => p.name)).toEqual(["Zoe"]);
+    expect(stateOf("zoe").you).toEqual({ role: "player", playerId: zoe.playerId });
+
+    await app.disconnect("zoe");                         // phone locked mid-game
+    await app.connect("zoe-again", code);
+    await send("zoe-again", { t: "hello", token: zoe.token });
+    expect(stateOf("zoe-again").you).toEqual({ role: "player", playerId: zoe.playerId });
+
+    await send("host", { t: "end" });
+    await send("host", { t: "rematch" });
+    const view = stateOf("host").view;
+    expect(view.players.map((p) => p.id)).toEqual([ana.playerId, zoe.playerId]);
+    expect(view.waiting).toEqual([]);
+  });
+
   it("the host can close the room from the lobby too", async () => {
     const { code } = await createRoom();
     await joinAs("ana", code, "Ana");

@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState, type FormEvent } from "react";
 import {
-  Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, Reveal, RoomClosed, Roulette, RulesSummary, Scoreboard, money, nameOf, stageOf, useOpening, useServerNow, revealShowing,
+  Board, ConfirmButton, WaitingLine, ConnectionDot, CopyText, Podium, QuestionPanel, Reveal, RoomClosed, Roulette, RulesSummary, Scoreboard, money, nameOf, stageOf, useOpening, useServerNow, revealShowing,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 import { useCountdown } from "../../lib/useCountdown";
@@ -33,6 +33,10 @@ export default function PlayPage() {
 
   const { view, connected, you } = state;
   const me = you.playerId;
+  // Joined mid-game: watching until the host taps "Otra ronda".
+  const inLine = !!me && view.waiting.some((p) => p.id === me);
+  const seated = !!me && !inLine;
+  const playing = view.phase.kind === "picking" || view.phase.kind === "answering";
   const myTurn = view.phase.kind === "picking" && view.players[view.turnOwner]?.id === me;
   const myAnswer = view.phase.kind === "answering" && view.phase.answerer === me;
   const myScore = me ? view.scores[me] ?? 0 : 0;
@@ -78,23 +82,34 @@ export default function PlayPage() {
         {status !== "open" && <p className="notice">Reconectando…</p>}
         {error && <p className="notice error">{describeError(error)}</p>}
 
-        {me && view.phase.kind !== "lobby" && view.phase.kind !== "closed" && (
+        {seated && view.phase.kind !== "lobby" && view.phase.kind !== "closed" && (
           <p className="me-bar">
             <span>{nameOf(view, me)}</span>
             <span className="score">{money(myScore)}</span>
           </p>
         )}
 
-        {!me && view.phase.kind === "lobby" && (
+        {!me && view.phase.kind !== "closed" && (
           <form className="panel join" onSubmit={onJoin}>
-            <label htmlFor="name" className="pixel-title small">¿Cómo te llamas?</label>
+            {view.phase.kind === "lobby"
+              ? <label htmlFor="name" className="pixel-title small">¿Cómo te llamas?</label>
+              : <>
+                  <p className="pixel-title small">La partida ya empezó</p>
+                  <label htmlFor="name" className="hint">Escribe tu nombre y entras en la siguiente ronda. Mientras, puedes mirar.</label>
+                </>}
             <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={20} autoComplete="nickname" autoFocus />
-            <button className="btn big" type="submit" disabled={!name.trim()}>Unirme</button>
+            <button className="btn big" type="submit" disabled={!name.trim()}>{view.phase.kind === "lobby" ? "Unirme" : "Apuntarme"}</button>
           </form>
         )}
 
-        {!me && (view.phase.kind === "picking" || view.phase.kind === "answering") && (
-          <p className="notice">La partida ya empezó. Puedes mirar desde aquí.</p>
+        {inLine && view.phase.kind !== "closed" && (
+          <section className="in-line">
+            <p className="banner">Estás en la fila, {nameOf(view, me)}</p>
+            <p className="hint">Entras cuando el anfitrión empiece otra ronda. Mientras, mira el juego.</p>
+            <div className="leave-row">
+              <ConfirmButton label="Salir" question="¿Salir de la fila?" onConfirm={leave} />
+            </div>
+          </section>
         )}
 
         {me && view.phase.kind === "lobby" && (
@@ -123,9 +138,15 @@ export default function PlayPage() {
           </>
         )}
 
-        {me && (view.phase.kind === "picking" || view.phase.kind === "answering") && (
+        {playing && (
           <>
-            <Scoreboard view={view} connected={connected} me={me} />
+            <Scoreboard view={view} connected={connected} {...(seated && { me })} />
+            <WaitingLine view={view} />
+          </>
+        )}
+
+        {seated && playing && (
+          <>
             <div className="leave-row">
               <ConfirmButton label="Salir" question="¿Salir de la partida?" onConfirm={leave} />
             </div>
@@ -135,10 +156,11 @@ export default function PlayPage() {
         {view.phase.kind === "gameOver" && !revealing && (
           <Podium view={view}>
             <div className="after-game">
-              {me && (view.encore.includes(me)
+              <WaitingLine view={view} connected={connected} />
+              {seated && (view.encore.includes(me)
                 ? <p className="banner">¡Listo! Le avisamos al anfitrión.</p>
                 : <button className="btn big" onClick={() => send({ t: "encore" })}>¡Otra ronda!</button>)}
-              <button className="btn small quiet" onClick={leave}>Salir</button>
+              {!inLine && <button className="btn small quiet" onClick={leave}>Salir</button>}
             </div>
           </Podium>
         )}

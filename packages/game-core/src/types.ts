@@ -135,6 +135,8 @@ export interface GameState {
    * and turn indexes stay stable) but no turn or steal is ever handed to them again.
    */
   left: PlayerId[];
+  /** Joined after the game started. They watch, and "Otra ronda" seats them. */
+  waiting: Player[];
 }
 
 // ---- Actions ----
@@ -202,6 +204,8 @@ export interface PublicState {
   picks: Pick[];
   /** Left mid-game: shown as gone, never get a turn. */
   left: PlayerId[];
+  /** Joined mid-game: they watch and get a seat in the next round. */
+  waiting: Player[];
 }
 
 export interface Ranking {
