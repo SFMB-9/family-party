@@ -21,6 +21,7 @@ export default function PlayPage() {
   const secondsLeft = useCountdown(state?.view.phase, clockOffset, send);
   const [name, setName] = useState("");
   const [dismissed, setDismissed] = useState<number | null>(null);
+  const [watching, setWatching] = useState(false); // arrived mid-game and chose "Solo mirar"
   const reveal = state?.view.reveal;
   const serverNow = useServerNow(clockOffset, !!reveal);
   const router = useRouter();
@@ -37,6 +38,8 @@ export default function PlayPage() {
   const inLine = !!me && view.waiting.some((p) => p.id === me);
   const seated = !!me && !inLine;
   const playing = view.phase.kind === "picking" || view.phase.kind === "answering";
+  // Arrived after the start: the same name screen as the lobby first, then the game behind it.
+  const gate = !me && !watching && view.phase.kind !== "lobby" && view.phase.kind !== "closed";
   const myTurn = view.phase.kind === "picking" && view.players[view.turnOwner]?.id === me;
   const myAnswer = view.phase.kind === "answering" && view.phase.answerer === me;
   const myScore = me ? view.scores[me] ?? 0 : 0;
@@ -57,8 +60,16 @@ export default function PlayPage() {
     send({ t: "join", name });
   };
 
+  const nameForm = (
+    <form className="panel join" onSubmit={onJoin}>
+      <label htmlFor="name" className="pixel-title small">¿Cómo te llamas?</label>
+      <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={20} autoComplete="nickname" autoFocus />
+      <button className="btn big" type="submit" disabled={!name.trim()}>Unirme</button>
+    </form>
+  );
+
   return (
-    <div className="stage" data-stage={stageOf(view.phase)}>
+    <div className="stage" data-stage={gate ? "lobby" : stageOf(view.phase)}>
       <main className="shell phone">
         <header className="top">
           <h1 className="logo small">{BRAND}</h1>
@@ -89,17 +100,23 @@ export default function PlayPage() {
           </p>
         )}
 
-        {!me && view.phase.kind !== "closed" && (
-          <form className="panel join" onSubmit={onJoin}>
-            {view.phase.kind === "lobby"
-              ? <label htmlFor="name" className="pixel-title small">¿Cómo te llamas?</label>
-              : <>
-                  <p className="pixel-title small">La partida ya empezó</p>
-                  <label htmlFor="name" className="hint">Escribe tu nombre y entras en la siguiente ronda. Mientras, puedes mirar.</label>
-                </>}
-            <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={20} autoComplete="nickname" autoFocus />
-            <button className="btn big" type="submit" disabled={!name.trim()}>{view.phase.kind === "lobby" ? "Unirme" : "Apuntarme"}</button>
-          </form>
+        {!me && view.phase.kind === "lobby" && nameForm}
+
+        {gate && (
+          <div className="late-join">
+            <p className="hint">La partida <strong>ya empezó</strong>: puedes entrar en la siguiente ronda y mientras la ves desde aquí.</p>
+            {nameForm}
+            <div className="leave-row">
+              <button className="btn small quiet" onClick={() => setWatching(true)}>Solo mirar</button>
+            </div>
+          </div>
+        )}
+
+        {!me && watching && view.phase.kind !== "lobby" && view.phase.kind !== "closed" && (
+          <div className="watch-row">
+            <span className="hint">Estás mirando.</span>
+            <button className="btn small" onClick={() => setWatching(false)}>Unirme a la siguiente ronda</button>
+          </div>
         )}
 
         {inLine && view.phase.kind !== "closed" && (
@@ -122,7 +139,7 @@ export default function PlayPage() {
           </section>
         )}
 
-        {view.phase.kind === "picking" && (
+        {!gate && view.phase.kind === "picking" && (
           <section>
             <p className={`banner ${myTurn ? "mine" : ""}`}>
               {myTurn ? "¡Tu turno! Elige una carta" : <>Turno de <strong>{nameOf(view, view.players[view.turnOwner]?.id)}</strong></>}
@@ -131,14 +148,14 @@ export default function PlayPage() {
           </section>
         )}
 
-        {view.phase.kind === "answering" && (
+        {!gate && view.phase.kind === "answering" && (
           <>
             {myAnswer && view.phase.tried.length > 0 && <p className="banner mine">¡Puedes robar esta pregunta!</p>}
             <QuestionPanel view={view} secondsLeft={secondsLeft} canAnswer={myAnswer} onAnswer={(choice) => send({ t: "answer", choice })} />
           </>
         )}
 
-        {playing && (
+        {!gate && playing && (
           <>
             <Scoreboard view={view} connected={connected} {...(seated && { me })} />
             <WaitingLine view={view} />
@@ -153,7 +170,7 @@ export default function PlayPage() {
           </>
         )}
 
-        {view.phase.kind === "gameOver" && !revealing && (
+        {!gate && view.phase.kind === "gameOver" && !revealing && (
           <Podium view={view}>
             <div className="after-game">
               <WaitingLine view={view} connected={connected} />
@@ -168,8 +185,8 @@ export default function PlayPage() {
         {view.phase.kind === "closed" && <RoomClosed onLeave={forget} />}
       </main>
 
-      {opening.active && <Roulette view={view} onDone={opening.finish} avatarSize={48} />}
-      {revealing && <Reveal view={view} serverNow={serverNow} me={me} onClose={() => setDismissed(reveal!.closedAt)} />}
+      {!gate && opening.active && <Roulette view={view} onDone={opening.finish} avatarSize={48} />}
+      {!gate && revealing && <Reveal view={view} serverNow={serverNow} me={me} onClose={() => setDismissed(reveal!.closedAt)} />}
     </div>
   );
 }
