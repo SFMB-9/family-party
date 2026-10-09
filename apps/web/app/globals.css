@@ -651,3 +651,9 @@ input {
   .host .podium .name, .host .podium .score { font-size: 24px; }
 }
 @media (min-width: 420px) and (max-width: 600px) { .host .card { font-size: 24px; } }
+/* Arrived mid-game: same name screen as the lobby, then the game. */
+.late-join { margin-top: 6vh; }
+.late-join > .hint { text-align: center; margin-bottom: 12px; }
+.late-join > .hint strong { color: var(--text-color); font-weight: normal; }
+.late-join .join { margin-top: 0; }
+.watch-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
