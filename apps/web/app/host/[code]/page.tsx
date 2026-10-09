@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   AfterGame, Announcement, Avatar, Board, ConfirmButton, ConnectionDot, CopyText, Podium, QuestionPanel, Reveal, RoomClosed, OptionsPanel,
-  Roulette, RulesSummary, Scoreboard, stageOf, useOpening, useServerNow, revealShowing,
+  Roulette, RulesSummary, Scoreboard, WaitingLine, stageOf, useOpening, useServerNow, revealShowing,
 } from "../../components";
 import { describeError } from "../../lib/errors";
 
@@ -192,6 +192,7 @@ export default function HostPage() {
             </div>
             <aside>
               <Scoreboard view={view} connected={connected} {...(me && { me })} />
+              <WaitingLine view={view} />
             </aside>
           </div>
         )}

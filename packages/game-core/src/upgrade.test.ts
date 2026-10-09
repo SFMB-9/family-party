@@ -7,8 +7,9 @@ import type { GameState } from "./types";
 
 describe("upgradeState", () => {
   it("fills fields older rooms don't have, keeping the old behavior", () => {
-    const { rules: _r, encore: _e, played: _p, ...old } = initialState();
+    const { rules: _r, encore: _e, played: _p, waiting: _w, ...old } = initialState();
     const s = upgradeState(old as Partial<GameState>);
+    expect(s.waiting).toEqual([]);
     expect(s.rules).toEqual(DEFAULT_RULES);
     expect(s.encore).toEqual([]);
     expect(s.played).toEqual([]);
@@ -33,8 +34,9 @@ describe("upgradeState", () => {
 
 describe("upgradeView", () => {
   it("lets a newer client read a snapshot from an older server", () => {
-    const { rules: _r, encore: _e, ...old } = publicView(initialState());
+    const { rules: _r, encore: _e, waiting: _w, ...old } = publicView(initialState());
     const v = upgradeView(old as ReturnType<typeof publicView>);
+    expect(v.waiting).toEqual([]);
     expect(v.rules).toEqual(DEFAULT_RULES);
     expect(v.encore).toEqual([]);
   });

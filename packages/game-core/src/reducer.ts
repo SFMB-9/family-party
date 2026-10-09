@@ -12,7 +12,7 @@ export const MAX_NAME_LENGTH = 20;
 export function initialState(): GameState {
   return {
     players: [], scores: {}, board: [], questions: {}, ratings: {}, attempts: {},
-    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES, picks: [], left: [],
+    turnOwner: 0, phase: { kind: "lobby" }, reveal: null, seed: 0, encore: [], played: [], rules: DEFAULT_RULES, picks: [], left: [], waiting: [],
   };
 }
 
@@ -54,19 +54,31 @@ function assertNever(x: never): never {
 
 // ---------------------------------------------------------------- lobby
 
+/**
+ * Lobby: take a seat. Once the game started (or on the podium): wait in line. Waiting players
+ * watch the round and "Otra ronda" seats them, so a latecomer is never just told no.
+ */
 function join(state: GameState, action: ActionOf<"JOIN">): ReduceResult {
-  if (state.phase.kind !== "lobby") return fail("WRONG_PHASE");
-  if (state.players.some((p) => p.id === action.player.id)) return fail("ALREADY_JOINED");
-  if (state.players.length >= MAX_PLAYERS) return fail("ROOM_FULL");
+  const kind = state.phase.kind;
+  if (kind === "closed") return fail("WRONG_PHASE");
+  const everyone = [...state.players, ...state.waiting];
+  if (everyone.some((p) => p.id === action.player.id)) return fail("ALREADY_JOINED");
+  if (seated(state) + state.waiting.length >= MAX_PLAYERS) return fail("ROOM_FULL");
 
   const name = normalizeName(action.player.name);
   if (name === null) return fail("INVALID_NAME");
-  if (state.players.some((p) => sameName(p.name, name))) return fail("NAME_TAKEN");
+  if (everyone.some((p) => sameName(p.name, name))) return fail("NAME_TAKEN");
 
   const player = { ...action.player, name };   // store the cleaned-up name, not the raw one
+  if (kind !== "lobby") return done({ ...state, waiting: [...state.waiting, player] });
   const players = [...state.players, player];
   const scores = { ...state.scores, [player.id]: 0 };
   return done({ ...state, players, scores });
+}
+
+/** Seats that will still be taken next round: players who haven't left. */
+function seated(state: GameState): number {
+  return state.players.filter((p) => !state.left.includes(p.id)).length;
 }
 
 /**
@@ -93,6 +105,9 @@ function sameName(a: string, b: string): boolean {
  */
 function leave(state: GameState, action: ActionOf<"LEAVE">): ReduceResult {
   const { playerId } = action;
+  if (state.waiting.some((p) => p.id === playerId)) {
+    return done({ ...state, waiting: state.waiting.filter((p) => p.id !== playerId) }); // left the line
+  }
   if (!state.players.some((p) => p.id === playerId)) return fail("UNKNOWN_PLAYER");
   const phase = state.phase;
 
@@ -333,11 +348,13 @@ function encore(state: GameState, action: ActionOf<"ENCORE">): ReduceResult {
  * Same room, same code, same packs: back to the lobby so latecomers can join.
  * Only players in `keep` stay (the server passes whoever is still connected),
  * so someone who went home doesn't get a turn nobody will take.
+ * Whoever waited in line (and is still connected) takes a seat after them.
  */
 function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
   if (state.phase.kind !== "gameOver") return fail("WRONG_PHASE");
   const keep = new Set(action.keep);
-  const players = state.players.filter((p) => keep.has(p.id) && !state.left.includes(p.id));
+  const stay = state.players.filter((p) => keep.has(p.id) && !state.left.includes(p.id));
+  const players = [...stay, ...state.waiting.filter((p) => keep.has(p.id))].slice(0, MAX_PLAYERS);
   const playedNow = state.board.filter((c) => c.played).map((c) => c.questionId);
 
   return done({
@@ -351,6 +368,7 @@ function rematch(state: GameState, action: ActionOf<"REMATCH">): ReduceResult {
     reveal: null,
     encore: [],
     left: [],
+    waiting: [],
     played: [...new Set([...state.played, ...playedNow])],
   });
 }

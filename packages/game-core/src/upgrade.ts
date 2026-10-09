@@ -16,6 +16,7 @@ export function upgradeState(saved: Partial<GameState>): GameState {
     played: saved.played ?? [],                      // added with play-again
     picks: saved.picks ?? [],                        // added with lobby picks (empty = legacy room selection)
     left: saved.left ?? [],                          // added with leaving mid-game
+    waiting: saved.waiting ?? [],                    // added with late join
   };
   return { ...state, board: withColumns(state.board) };
 }
@@ -32,6 +33,7 @@ export function upgradeView(view: PublicState): PublicState {
     encore: partial.encore ?? [],
     picks: partial.picks ?? [],
     left: partial.left ?? [],
+    waiting: partial.waiting ?? [],
     board: withColumns(partial.board),
   };
 }

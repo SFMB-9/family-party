@@ -24,7 +24,7 @@ export const count = (n: number, one: string, many?: string) => `${n} ${plural(n
 export const money = (n: number) => (n < 0 ? `-$${-n}` : `$${n}`);
 
 export const nameOf = (view: PublicState, id: PlayerId | undefined) =>
-  view.players.find((p) => p.id === id)?.name ?? "—";
+  [...view.players, ...view.waiting].find((p) => p.id === id)?.name ?? "—";
 
 /** Which background color the whole screen uses: one color per phase, as in the 2023 game. */
 export function stageOf(phase: Phase | undefined): "lobby" | "board" | "question" | "podium" {
@@ -126,6 +126,19 @@ export function Scoreboard({ view, connected, me }: { view: PublicState; connect
         </li>
       ))}
     </ol>
+  );
+}
+
+/** Who joined mid-game. They watch this round and "Otra ronda" seats them. */
+export function WaitingLine({ view, connected }: { view: PublicState; connected?: PlayerId[] }) {
+  // On the podium only phones still connected get a seat, so only they are announced.
+  const names = view.waiting.filter((p) => !connected || connected.includes(p.id)).map((p) => p.name);
+  if (names.length === 0) return null;
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} y ${names.at(-1)}`;
+  return (
+    <p className="waiting-line">
+      <strong>{list}</strong> {names.length === 1 ? "entra" : "entran"} en la siguiente ronda.
+    </p>
   );
 }
 
@@ -482,6 +495,7 @@ export function AfterGame({ view, connected, onRematch, onClose }: {
           <span className="count">{wanting.length}/{here.length}</span>
         </p>
       )}
+      <WaitingLine view={view} connected={connected} />
       <div className="after-actions">
         <button className="btn big" onClick={onRematch}>Otra ronda</button>
         <ConfirmButton label="Cerrar sala" question="¿Cerrar la sala?" onConfirm={onClose} />
